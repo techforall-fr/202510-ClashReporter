@@ -66,7 +66,19 @@ async def startup_event():
     logger.info("Smart Clash Reporter API Starting")
     logger.info("=" * 60)
     logger.info(f"Mode: {'MOCK' if settings.is_mock_mode else 'LIVE'}")
+    logger.info(f"USE_MOCK setting: {settings.use_mock}")
     logger.info(f"APS Credentials: {'Configured' if settings.has_aps_credentials else 'Not configured'}")
+    
+    # Warning if LIVE mode without credentials
+    if not settings.is_mock_mode and not settings.has_aps_credentials:
+        logger.warning("⚠️  LIVE mode enabled but APS credentials are missing or incomplete!")
+        logger.warning("⚠️  The application will attempt to connect to APS but may fail.")
+        logger.warning("⚠️  Required credentials: APS_CLIENT_ID, APS_CLIENT_SECRET, APS_ACCOUNT_ID, APS_PROJECT_ID")
+    
+    if settings.has_aps_credentials and not settings.is_mock_mode:
+        logger.info(f"APS Project ID: {settings.aps_project_id}")
+        logger.info(f"APS Account ID: {settings.aps_account_id}")
+    
     logger.info(f"CORS Origins: {settings.cors_origins_list}")
     logger.info(f"Exports Directory: {settings.exports_dir}")
     logger.info(f"Captures Directory: {settings.captures_dir}")

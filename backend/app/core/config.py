@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     aps_modelset_id: Optional[str] = None
     
     # Application
-    use_mock: bool = True
+    use_mock: bool = False
     log_level: str = "INFO"
     api_port: int = 8000
     frontend_port: int = 8501
@@ -51,7 +51,9 @@ class Settings(BaseSettings):
     @property
     def is_mock_mode(self) -> bool:
         """Determine if app should run in mock mode."""
-        return self.use_mock or not self.has_aps_credentials
+        # If explicitly set to not use mock, respect that choice
+        # even if credentials might be missing or invalid
+        return self.use_mock
     
     @property
     def cors_origins_list(self) -> list[str]:

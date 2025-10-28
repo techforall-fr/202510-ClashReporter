@@ -16,6 +16,8 @@ Write-Host ""
 
 # Determine mode
 $mode = if ($UseLive) { "LIVE" } else { "MOCK" }
+    $mode = "LIVE"
+$UseLive = $true
 $modeColor = if ($UseLive) { "Green" } else { "Cyan" }
 Write-Host "Mode: $mode" -ForegroundColor $modeColor
 Write-Host ""
@@ -63,6 +65,7 @@ Write-Host "Dependencies installed" -ForegroundColor Green
 Write-Host ""
 
 # Set environment variable for mock mode
+$useMockValue = if ($UseLive) { "false" } else { "true" }
 if ($UseLive) {
     $env:USE_MOCK = "false"
 } else {
@@ -90,8 +93,8 @@ Start-Process powershell -ArgumentList @"
     -NoExit -NoProfile -Command `"
     Write-Host 'Backend API Starting...' -ForegroundColor Cyan;
     Write-Host '';
-    & Set-Location "\"$PWD\backend\"";
-    if ("$mode" -eq 'MOCK') { `$env:USE_MOCK = 'true' } else { `$env:USE_MOCK = 'false' };
+    & Set-Location \`"$PWD\backend\`";
+    `$env:USE_MOCK = '$useMockValue';
     python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
     `"
 "@
