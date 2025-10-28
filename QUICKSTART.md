@@ -3,9 +3,16 @@
 ## 🚀 Fastest Way to Run (Windows)
 
 ### Option 1: PowerShell Script (Recommended)
+
+**Mock Mode (default - no credentials needed):**
 ```powershell
 # Open PowerShell in project root
 .\start.ps1
+```
+
+**Live Mode (requires APS credentials in .env):**
+```powershell
+.\start.ps1 -UseLive
 ```
 
 That's it! The script will:
@@ -28,8 +35,11 @@ python -m app.demo --mock
 # Make script executable
 chmod +x start.sh
 
-# Run
+# Mock Mode (default)
 ./start.sh
+
+# Live Mode (set USE_MOCK=false in .env first)
+USE_MOCK=false ./start.sh
 
 # Or use Python demo
 cd backend

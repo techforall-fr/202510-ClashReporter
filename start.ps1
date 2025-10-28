@@ -2,8 +2,7 @@
 # This script launches both backend and frontend in separate terminal windows
 
 param(
-    [switch]$Mock = $true,
-    [switch]$Live = $false
+    [switch]$UseLive
 )
 
 $line = "=" * 58
@@ -16,8 +15,8 @@ Write-Host $line -ForegroundColor Cyan
 Write-Host ""
 
 # Determine mode
-$mode = if ($Live) { "LIVE" } else { "MOCK" }
-$modeColor = if ($Live) { "Green" } else { "Cyan" }
+$mode = if ($UseLive) { "LIVE" } else { "MOCK" }
+$modeColor = if ($UseLive) { "Green" } else { "Cyan" }
 Write-Host "Mode: $mode" -ForegroundColor $modeColor
 Write-Host ""
 
@@ -64,7 +63,9 @@ Write-Host "Dependencies installed" -ForegroundColor Green
 Write-Host ""
 
 # Set environment variable for mock mode
-if (!$Live) {
+if ($UseLive) {
+    $env:USE_MOCK = "false"
+} else {
     $env:USE_MOCK = "true"
 }
 
@@ -90,7 +91,7 @@ Start-Process powershell -ArgumentList @"
     Write-Host 'Backend API Starting...' -ForegroundColor Cyan;
     Write-Host '';
     & Set-Location "\"$PWD\backend\"";
-    if ("$mode" -eq 'MOCK') { `$env:USE_MOCK = 'true' };
+    if ("$mode" -eq 'MOCK') { `$env:USE_MOCK = 'true' } else { `$env:USE_MOCK = 'false' };
     python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
     `"
 "@
