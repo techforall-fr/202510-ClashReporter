@@ -20,7 +20,7 @@ Smart Clash Reporter est une application complète qui se connecte à Autodesk A
 ## ✨ Fonctionnalités
 
 ### Core Features
-- ✅ **Connexion Autodesk ACC/MCP** via APIs APS (OAuth 2.0)
+- ✅ **Connexion Autodesk ACC** via APIs APS (OAuth 2.0)
 - ✅ **Récupération de clashes** avec pagination et filtrage
 - ✅ **Visualisation 3D** avec Autodesk Viewer (intégration HTML)
 - ✅ **Génération PDF automatique** avec captures, métriques, graphiques
@@ -240,7 +240,7 @@ Activé avec credentials APS complets.
 - Accès au projet ACC
 
 **Données:**
-- ✅ Clashes réels depuis ACC/MCP
+- ✅ Clashes réels depuis ACC
 - ✅ Liens directs vers ACC
 - ✅ URNs de modèles réels
 - ✅ Viewer 3D avec tokens valides
@@ -459,7 +459,7 @@ Les contributions sont bienvenues! Merci de:
 
 - Documentation APS: https://aps.autodesk.com/
 - Issues: Ouvrez une issue GitHub
-- Email: [votre-email]
+- Email: frenot.manu@gmail.com
 
 ## 👏 Remerciements
 
