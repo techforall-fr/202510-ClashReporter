@@ -214,60 +214,133 @@ class APSMCClient:
         all_clashes: List[Clash] = []
         
         try:
-            # First, list all available model sets to verify the configured one exists
-            logger.info("Listing available model sets...")
-            model_sets = await self.list_model_sets()
-            logger.info(f"Found {len(model_sets)} model sets in project")
-            
-            if model_sets:
-                for ms in model_sets:
-                    logger.info(f"  - Model Set: {ms.get('name')} (ID: {ms.get('id')})")
-            
-            # Check if our configured model set exists
-            model_set_exists = any(ms.get('id') == self.modelset_id for ms in model_sets)
-            
-            if not model_set_exists and model_sets:
-                logger.warning(f"Configured model set {self.modelset_id} not found!")
-                logger.warning(f"Using first available model set instead")
-                self.modelset_id = model_sets[0].get('id')
-                logger.info(f"Using model set: {model_sets[0].get('name')} ({self.modelset_id})")
-            
-            # Get clash tests for the model set
-            clash_tests = await self.list_clash_tests()
-            logger.info(f"Found {len(clash_tests)} clash tests in model set")
-            
-            # Fetch assigned clash groups for each test
-            for test in clash_tests:
-                test_id = test.get("id")
-                if not test_id:
-                    continue
+            # If a specific MODELSET_ID is configured, use it directly
+            if self.modelset_id:
+                logger.info(f"Using configured Model Set ID: {self.modelset_id}")
+            else:
+                # Only try to list model sets if no specific ID is configured
+                logger.info("No Model Set ID configured, listing available model sets...")
+                model_sets = await self.list_model_sets()
+                logger.info(f"Found {len(model_sets)} model sets in project")
                 
-                logger.info(f"Fetching clashes for test {test_id}")
+                if model_sets:
+                    for ms in model_sets:
+                        logger.info(f"  - Model Set: {ms.get('name')} (ID: {ms.get('id')})")
+                    
+                    # Use the first available model set
+                    self.modelset_id = model_sets[0].get('id')
+                    logger.info(f"Using first model set: {model_sets[0].get('name')} ({self.modelset_id})")
+                else:
+                    logger.error("No model sets found in project!")
+                    return []
+            
+            # Try to get the latest model set version first
+            logger.info(f"Fetching latest version of model set: {self.modelset_id}")
+            
+            # Get latest version
+            version_url = (
+                f"{self.base_url}/bim360/modelset/v3/"
+                f"containers/{self.project_id}/modelsets/{self.modelset_id}/versions/latest"
+            )
+            
+            headers = await self._get_headers()
+            log_api_call(logger, "GET", version_url)
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                try:
+                    version_response = await client.get(version_url, headers=headers)
+                    version_response.raise_for_status()
+                    version_data = version_response.json()
+                    version_num = version_data.get("version")
+                    logger.info(f"Latest model set version: {version_num}")
+                    
+                    # Now try to get clash tests for this specific version
+                    tests_url = (
+                        f"{self.base_url}/bim360/clash/v3/"
+                        f"containers/{self.project_id}/modelsets/{self.modelset_id}/versions/{version_num}/tests"
+                    )
+                    
+                    log_api_call(logger, "GET", tests_url)
+                    tests_response = await client.get(tests_url, headers=headers)
+                    tests_response.raise_for_status()
+                    
+                    tests_data = tests_response.json()
+                    clash_tests = tests_data.get("results", [])
+                    
+                    logger.info(f"Found {len(clash_tests)} clash tests in version {version_num}")
+                    
+                    if clash_tests:
+                        for test in clash_tests:
+                            logger.info(f"  - Test: {test.get('name')} (ID: {test.get('id')})")
+                    
+                except httpx.HTTPStatusError as e:
+                    logger.warning(f"Could not fetch version-specific tests: {e.response.status_code}")
+                    logger.warning("Trying model-level tests endpoint...")
+                    
+                    # Fallback to model-level tests
+                    tests_url = (
+                        f"{self.base_url}/bim360/clash/v3/"
+                        f"containers/{self.project_id}/modelsets/{self.modelset_id}/tests"
+                    )
+                    
+                    log_api_call(logger, "GET", tests_url)
+                    tests_response = await client.get(tests_url, headers=headers)
+                    tests_response.raise_for_status()
+                    
+                    tests_data = tests_response.json()
+                    clash_tests = tests_data.get("results", [])
+                    logger.info(f"Found {len(clash_tests)} clash tests at model level")
                 
-                # Paginate through clash groups
-                offset = 0
-                limit = 100
+                if not clash_tests:
+                    logger.warning("No clash tests found! This model set may not have any configured tests.")
+                    logger.info("Note: Clash tests must be created and run in ACC Model Coordination before they appear in the API")
+                    return []
                 
-                while True:
-                    clash_groups = await self.get_assigned_clash_groups(test_id, offset, limit)
-                    if not clash_groups:
-                        break
+                # Fetch clashes from each test
+                for test in clash_tests:
+                    test_id = test.get("id")
+                    test_name = test.get("name", "Unnamed")
                     
-                    logger.debug(f"Retrieved {len(clash_groups)} clash groups (offset={offset})")
+                    if not test_id:
+                        continue
                     
-                    # Normalize and add clashes
-                    for raw_clash in clash_groups:
-                        try:
-                            clash = self._normalize_clash(raw_clash)
-                            all_clashes.append(clash)
-                        except Exception as e:
-                            logger.error(f"Failed to normalize clash: {e}", exc_info=True)
+                    logger.info(f"Fetching clashes for test '{test_name}' (ID: {test_id})")
                     
-                    # Check if more pages
-                    if len(clash_groups) < limit:
-                        break
+                    # Try to get assigned clash groups for this test
+                    try:
+                        offset = 0
+                        limit = 100
+                        
+                        while True:
+                            clash_groups = await self.get_assigned_clash_groups(test_id, offset, limit)
+                            
+                            if not clash_groups:
+                                break
+                            
+                            logger.debug(f"Retrieved {len(clash_groups)} clash groups (offset={offset})")
+                            
+                            # Normalize and add clashes
+                            for raw_clash in clash_groups:
+                                try:
+                                    clash = self._normalize_clash(raw_clash)
+                                    all_clashes.append(clash)
+                                except Exception as e:
+                                    logger.error(f"Failed to normalize clash: {e}", exc_info=True)
+                                    logger.debug(f"Raw clash data: {raw_clash}")
+                            
+                            # Check if more pages
+                            if len(clash_groups) < limit:
+                                break
+                            
+                            offset += limit
                     
-                    offset += limit
+                    except httpx.HTTPStatusError as e:
+                        if e.response.status_code == 404:
+                            logger.warning(f"No assigned clashes found for test {test_id}")
+                        else:
+                            logger.error(f"Error fetching clashes for test {test_id}: {e}")
+                    except Exception as e:
+                        logger.error(f"Error fetching clashes for test {test_id}: {e}")
             
             logger.info(f"Successfully fetched {len(all_clashes)} clashes from APS")
             return all_clashes
