@@ -8,12 +8,12 @@ httpx==0.26.0
 requests==2.31.0
 
 # Data Validation
-pydantic==2.5.3
+pydantic==2.10.0
 pydantic-settings==2.1.0
 
 # PDF Generation
 reportlab==4.0.9
-Pillow==10.2.0
+Pillow==11.0.0
 
 # Charts & Visualization
 matplotlib==3.8.2
