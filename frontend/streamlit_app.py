@@ -87,6 +87,37 @@ def fetch_config():
         return None
 
 
+def fetch_auth_status():
+    """Fetch authentication status."""
+    try:
+        response = requests.get(f"{API_BASE_URL}/api/auth/status", timeout=5)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        return {"authenticated": False, "user_token_available": False}
+
+
+def display_auth_status(config, auth_status):
+    """Display authentication status and login button."""
+    if config and not config.get("is_mock_mode"):
+        if auth_status.get("authenticated"):
+            st.success("✅ Connecté avec un compte Autodesk")
+            if st.button("🚪 Se déconnecter", key="logout"):
+                try:
+                    requests.get(f"{API_BASE_URL}/api/auth/logout", timeout=5)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erreur lors de la déconnexion: {e}")
+        else:
+            st.warning("⚠️ Mode LIVE nécessite une authentification Autodesk")
+            st.markdown("""
+            Pour accéder aux données réelles de votre projet ACC/BIM 360, vous devez vous connecter avec votre compte Autodesk.
+            """)
+            if st.button("🔐 Se connecter avec Autodesk", type="primary", key="login"):
+                login_url = f"{API_BASE_URL}/api/auth/login"
+                st.markdown(f'<meta http-equiv="refresh" content="0;url={login_url}">', unsafe_allow_html=True)
+
+
 def fetch_kpis():
     """Fetch KPIs from API."""
     try:
@@ -339,6 +370,25 @@ def main():
     
     # Sidebar filters
     with st.sidebar:
+        # Authentication status (only in LIVE mode)
+        auth_status = fetch_auth_status()
+        display_auth_status(config, auth_status)
+        
+        # Refresh button (only in LIVE mode when authenticated)
+        if config and not config.get("is_mock_mode") and auth_status.get("authenticated"):
+            if st.button("🔄 Charger les clashes depuis ACC", use_container_width=True, type="secondary"):
+                with st.spinner("Chargement des données depuis ACC..."):
+                    try:
+                        response = requests.post(f"{API_BASE_URL}/api/clashes/refresh", timeout=30)
+                        response.raise_for_status()
+                        result = response.json()
+                        st.success(f"✅ {result['message']} - {result['count']} clashes chargés")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Erreur lors du rafraîchissement: {e}")
+        
+        st.markdown("---")
+        
         st.markdown("## ⚙️ Filtres")
         
         severity_filter = st.multiselect(

@@ -39,17 +39,15 @@ class APSMCClient:
             "Content-Type": "application/json"
         }
     
-    async def list_clash_tests(self) -> List[Dict[str, Any]]:
+    async def list_model_sets(self) -> List[Dict[str, Any]]:
         """
-        List clash tests in the coordination space.
+        List all model sets in the container.
         
-        TODO: Verify exact endpoint from APS Model Coordination docs.
-        Example structure based on typical API patterns.
+        GET https://developer.api.autodesk.com/bim360/modelset/v3/containers/:containerId/modelsets
         """
         url = (
-            f"{self.base_url}/construction/modelcoordination/v1/"
-            f"accounts/{self.account_id}/projects/{self.project_id}/"
-            f"coordination-spaces/{self.coordination_space_id}/clash-tests"
+            f"{self.base_url}/bim360/modelset/v3/"
+            f"containers/{self.project_id}/modelsets"
         )
         
         headers = await self._get_headers()
@@ -62,21 +60,64 @@ class APSMCClient:
             data = response.json()
             return data.get("results", [])
     
-    async def get_clash_results(
-        self, 
-        clash_test_id: str,
+    async def list_clash_tests(self, modelset_id: str = None) -> List[Dict[str, Any]]:
+        """
+        List clash tests for a model set.
+        
+        GET https://developer.api.autodesk.com/bim360/clash/v3/containers/:containerId/modelsets/:modelSetId/tests
+        """
+        # Use provided modelset_id or fall back to configured one
+        ms_id = modelset_id or self.modelset_id
+        
+        url = (
+            f"{self.base_url}/bim360/clash/v3/"
+            f"containers/{self.project_id}/modelsets/{ms_id}/tests"
+        )
+        
+        headers = await self._get_headers()
+        log_api_call(logger, "GET", url)
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            return data.get("results", [])
+    
+    async def get_clash_test_resources(self, clash_test_id: str) -> Dict[str, Any]:
+        """
+        Get clash test resources/details.
+        
+        GET https://developer.api.autodesk.com/bim360/clash/v3/containers/:containerId/tests/:testId/resources
+        """
+        url = (
+            f"{self.base_url}/bim360/clash/v3/"
+            f"containers/{self.project_id}/tests/{clash_test_id}/resources"
+        )
+        
+        headers = await self._get_headers()
+        log_api_call(logger, "GET", url)
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            
+            return response.json()
+    
+    async def get_assigned_clash_groups(
+        self,
+        test_id: str,
         offset: int = 0,
         limit: int = 100
     ) -> List[Dict[str, Any]]:
         """
-        Get clash results for a specific clash test.
+        Get assigned clash groups for a clash test.
         
-        TODO: Adjust endpoint based on actual APS Model Coordination API.
+        GET https://developer.api.autodesk.com/bim360/clash/v3/containers/:containerId/tests/:testId/clashes/assigned
         """
         url = (
-            f"{self.base_url}/construction/modelcoordination/v1/"
-            f"accounts/{self.account_id}/projects/{self.project_id}/"
-            f"clash-tests/{clash_test_id}/results"
+            f"{self.base_url}/bim360/clash/v3/"
+            f"containers/{self.project_id}/tests/{test_id}/clashes/assigned"
         )
         
         params = {"offset": offset, "limit": limit}
@@ -88,7 +129,7 @@ class APSMCClient:
             response.raise_for_status()
             
             data = response.json()
-            return data.get("results", [])
+            return data.get("pagination", {}).get("results", [])
     
     def _normalize_clash(self, raw: Dict[str, Any]) -> Clash:
         """
@@ -162,56 +203,85 @@ class APSMCClient:
     
     async def fetch_all_clashes(self) -> List[Clash]:
         """
-        Fetch all clashes from the coordination space.
+        Fetch all clashes from the model set.
         
-        This iterates through clash tests and aggregates results.
+        This iterates through clash tests and aggregates assigned clash groups.
         """
         logger.info("Fetching clashes from APS Model Coordination")
+        logger.info(f"Configured Model Set ID: {self.modelset_id}")
+        logger.info(f"Container (Project) ID: {self.project_id}")
         
         all_clashes: List[Clash] = []
         
         try:
-            # Get clash tests
-            clash_tests = await self.list_clash_tests()
-            logger.info(f"Found {len(clash_tests)} clash tests")
+            # First, list all available model sets to verify the configured one exists
+            logger.info("Listing available model sets...")
+            model_sets = await self.list_model_sets()
+            logger.info(f"Found {len(model_sets)} model sets in project")
             
-            # Fetch results for each test
+            if model_sets:
+                for ms in model_sets:
+                    logger.info(f"  - Model Set: {ms.get('name')} (ID: {ms.get('id')})")
+            
+            # Check if our configured model set exists
+            model_set_exists = any(ms.get('id') == self.modelset_id for ms in model_sets)
+            
+            if not model_set_exists and model_sets:
+                logger.warning(f"Configured model set {self.modelset_id} not found!")
+                logger.warning(f"Using first available model set instead")
+                self.modelset_id = model_sets[0].get('id')
+                logger.info(f"Using model set: {model_sets[0].get('name')} ({self.modelset_id})")
+            
+            # Get clash tests for the model set
+            clash_tests = await self.list_clash_tests()
+            logger.info(f"Found {len(clash_tests)} clash tests in model set")
+            
+            # Fetch assigned clash groups for each test
             for test in clash_tests:
                 test_id = test.get("id")
                 if not test_id:
                     continue
                 
-                # Paginate through results
+                logger.info(f"Fetching clashes for test {test_id}")
+                
+                # Paginate through clash groups
                 offset = 0
                 limit = 100
                 
                 while True:
-                    results = await self.get_clash_results(test_id, offset, limit)
-                    if not results:
+                    clash_groups = await self.get_assigned_clash_groups(test_id, offset, limit)
+                    if not clash_groups:
                         break
                     
+                    logger.debug(f"Retrieved {len(clash_groups)} clash groups (offset={offset})")
+                    
                     # Normalize and add clashes
-                    for raw_clash in results:
+                    for raw_clash in clash_groups:
                         try:
                             clash = self._normalize_clash(raw_clash)
                             all_clashes.append(clash)
                         except Exception as e:
-                            logger.error(f"Failed to normalize clash: {e}")
+                            logger.error(f"Failed to normalize clash: {e}", exc_info=True)
                     
                     # Check if more pages
-                    if len(results) < limit:
+                    if len(clash_groups) < limit:
                         break
                     
                     offset += limit
             
-            logger.info(f"Fetched {len(all_clashes)} clashes from APS")
+            logger.info(f"Successfully fetched {len(all_clashes)} clashes from APS")
             return all_clashes
             
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error fetching clashes: {e}")
+            logger.error(f"Response status: {e.response.status_code}")
+            logger.error(f"Response body: {e.response.text}")
+            raise
         except httpx.HTTPError as e:
             logger.error(f"HTTP error fetching clashes: {e}")
             raise
         except Exception as e:
-            logger.error(f"Unexpected error fetching clashes: {e}")
+            logger.error(f"Unexpected error fetching clashes: {e}", exc_info=True)
             raise
 
 

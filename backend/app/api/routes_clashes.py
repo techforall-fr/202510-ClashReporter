@@ -58,3 +58,25 @@ async def get_clash_by_id(clash_id: str):
         raise HTTPException(status_code=404, detail=f"Clash {clash_id} not found")
     
     return clash
+
+
+@router.post("/refresh")
+async def refresh_clashes():
+    """
+    Force refresh clashes from APS (clear cache and reload).
+    
+    Useful after authentication or when you want fresh data from ACC.
+    """
+    clash_service = get_clash_service()
+    
+    # Clear cache
+    clash_service._clashes_cache = None
+    
+    # Force reload
+    clashes = await clash_service.get_all_clashes(force_refresh=True)
+    
+    return {
+        "message": "Clashes refreshed successfully",
+        "count": len(clashes),
+        "source": "mock" if len(clashes) == 100 else "aps"
+    }
