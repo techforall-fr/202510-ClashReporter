@@ -1,13 +1,18 @@
 """Autodesk Platform Services Model Coordination client.
 
-NOTE: Some endpoints are based on APS Model Coordination API documentation.
-If specific endpoints differ, adjust accordingly. This implementation provides
-a solid structure with mock fallback.
+Implements the official APS Model Coordination API workflow for retrieving clash data.
+Based on: https://aps.autodesk.com/en/docs/acc/v1/tutorials/model-coordination/mc-tutorial-clash/
 
-References:
-- https://aps.autodesk.com/en/docs/acc/v1/overview/
-- Model Coordination API endpoints (check latest docs)
+The workflow is:
+1. Get the latest model set version
+2. Get clash tests for that version
+3. Get resource URLs for test results
+4. Download and decompress JSON.gz files
+5. Parse and map clash data
 """
+import gzip
+import json
+from io import BytesIO
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -21,13 +26,11 @@ logger = get_logger(__name__)
 
 
 class APSMCClient:
-    """Client for APS Model Coordination API."""
+    """Client for APS Model Coordination API following official tutorial workflow."""
     
     def __init__(self):
         self.base_url = settings.aps_base_url
-        self.account_id = settings.aps_account_id
         self.project_id = settings.aps_project_id
-        self.coordination_space_id = settings.aps_coordination_space_id
         self.modelset_id = settings.aps_modelset_id
         self.auth_client = get_auth_client()
     
@@ -39,310 +42,350 @@ class APSMCClient:
             "Content-Type": "application/json"
         }
     
-    async def list_model_sets(self) -> List[Dict[str, Any]]:
+    async def get_latest_model_set_version(self) -> Optional[Dict[str, Any]]:
         """
-        List all model sets in the container.
+        Get the latest version of the model set.
         
-        GET https://developer.api.autodesk.com/bim360/modelset/v3/containers/:containerId/modelsets
+        GET /bim360/modelset/v3/containers/:containerId/modelsets/:modelSetId/versions/latest
         """
         url = (
             f"{self.base_url}/bim360/modelset/v3/"
-            f"containers/{self.project_id}/modelsets"
+            f"containers/{self.project_id}/modelsets/{self.modelset_id}/versions/latest"
         )
         
         headers = await self._get_headers()
         log_api_call(logger, "GET", url)
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=100.0) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
-            
-            data = response.json()
-            return data.get("results", [])
-    
-    async def list_clash_tests(self, modelset_id: str = None) -> List[Dict[str, Any]]:
-        """
-        List clash tests for a model set.
-        
-        GET https://developer.api.autodesk.com/bim360/clash/v3/containers/:containerId/modelsets/:modelSetId/tests
-        """
-        # Use provided modelset_id or fall back to configured one
-        ms_id = modelset_id or self.modelset_id
-        
-        url = (
-            f"{self.base_url}/bim360/clash/v3/"
-            f"containers/{self.project_id}/modelsets/{ms_id}/tests"
-        )
-        
-        headers = await self._get_headers()
-        log_api_call(logger, "GET", url)
-        
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(url, headers=headers)
-            response.raise_for_status()
-            
-            data = response.json()
-            return data.get("results", [])
-    
-    async def get_clash_test_resources(self, clash_test_id: str) -> Dict[str, Any]:
-        """
-        Get clash test resources/details.
-        
-        GET https://developer.api.autodesk.com/bim360/clash/v3/containers/:containerId/tests/:testId/resources
-        """
-        url = (
-            f"{self.base_url}/bim360/clash/v3/"
-            f"containers/{self.project_id}/tests/{clash_test_id}/resources"
-        )
-        
-        headers = await self._get_headers()
-        log_api_call(logger, "GET", url)
-        
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(url, headers=headers)
-            response.raise_for_status()
-            
             return response.json()
     
-    async def get_assigned_clash_groups(
-        self,
-        test_id: str,
-        offset: int = 0,
-        limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    async def get_clash_tests_for_version(self, version: int) -> List[Dict[str, Any]]:
         """
-        Get assigned clash groups for a clash test.
+        Get clash tests for a specific model set version.
         
-        GET https://developer.api.autodesk.com/bim360/clash/v3/containers/:containerId/tests/:testId/clashes/assigned
+        GET /bim360/clash/v3/containers/:containerId/modelsets/:modelSetId/versions/:version/tests
         """
         url = (
             f"{self.base_url}/bim360/clash/v3/"
-            f"containers/{self.project_id}/tests/{test_id}/clashes/assigned"
+            f"containers/{self.project_id}/modelsets/{self.modelset_id}/versions/{version}/tests"
         )
         
-        params = {"offset": offset, "limit": limit}
         headers = await self._get_headers()
-        log_api_call(logger, "GET", url, params=params)
+        log_api_call(logger, "GET", url)
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(url, headers=headers, params=params)
+        async with httpx.AsyncClient(timeout=100.0) as client:
+            response = await client.get(url, headers=headers)
             response.raise_for_status()
             
             data = response.json()
-            return data.get("pagination", {}).get("results", [])
+            return data.get("tests", [])
     
-    def _normalize_clash(self, raw: Dict[str, Any]) -> Clash:
+    async def get_test_resources(self, test_id: str) -> List[Dict[str, Any]]:
         """
-        Normalize raw APS clash data to internal Clash model.
+        Get downloadable resource URLs for a clash test.
         
-        Adjust field mapping based on actual API response structure.
+        GET /bim360/clash/v3/containers/:containerId/tests/:testId/resources
+        
+        Returns URLs to download:
+        - scope-version-clash.*.*.*.json.gz: Pairwise clash results
+        - scope-version-clash-instance.*.*.*.json.gz: Viewable data for clashed objects
+        - scope-version-document.*.*.*.json.gz: Document URNs for objects
         """
-        # Extract basic info
-        clash_id = raw.get("id", "unknown")
-        group_id = raw.get("groupId", "default")
-        title = raw.get("name", "Unnamed Clash")
-        
-        # Map status
-        status_str = raw.get("status", "open").lower()
-        status = ClashStatus(status_str) if status_str in ["open", "resolved", "suppressed"] else ClashStatus.OPEN
-        
-        # Map severity (if not provided, infer from distance or default to medium)
-        severity_str = raw.get("severity", "medium").lower()
-        severity = ClashSeverity(severity_str) if severity_str in ["high", "medium", "low"] else ClashSeverity.MEDIUM
-        
-        # Elements
-        element_a_data = raw.get("elementA", {})
-        element_b_data = raw.get("elementB", {})
-        
-        element_a = Element(
-            urn=element_a_data.get("urn", ""),
-            guid=element_a_data.get("guid", ""),
-            name=element_a_data.get("name", ""),
-            category=element_a_data.get("category", "")
+        url = (
+            f"{self.base_url}/bim360/clash/v3/"
+            f"containers/{self.project_id}/tests/{test_id}/resources"
         )
         
-        element_b = Element(
-            urn=element_b_data.get("urn", ""),
-            guid=element_b_data.get("guid", ""),
-            name=element_b_data.get("name", ""),
-            category=element_b_data.get("category", "")
-        )
+        headers = await self._get_headers()
+        log_api_call(logger, "GET", url)
         
-        # Location
-        location_data = raw.get("location", {})
-        location = Location(
-            x=location_data.get("x", 0.0),
-            y=location_data.get("y", 0.0),
-            z=location_data.get("z", 0.0),
-            level=location_data.get("level")
-        )
+        async with httpx.AsyncClient(timeout=100.0) as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            return data.get("resources", [])
+    
+    async def download_and_decompress_resource(self, url: str) -> Dict[str, Any]:
+        """
+        Download a JSON resource and decompress it if needed.
         
-        # Disciplines
-        discipline_a = element_a_data.get("discipline", "")
-        discipline_b = element_b_data.get("discipline", "")
+        The resource may be gzip-compressed or plain JSON (sometimes with UTF-8 BOM).
         
-        # Links
-        acc_link = raw.get("accLink") or f"https://acc.autodesk.com/projects/{self.project_id}/clashes/{clash_id}"
+        Args:
+            url: The direct download URL from get_test_resources
+            
+        Returns:
+            The JSON data as a dictionary
+        """
+        log_api_call(logger, "GET", url)
         
-        return Clash(
-            id=clash_id,
-            group_id=group_id,
-            title=title,
-            status=status,
-            severity=severity,
-            discipline_a=discipline_a,
-            discipline_b=discipline_b,
-            element_a=element_a,
-            element_b=element_b,
-            location=location,
-            screenshot_url=None,
-            acc_link=acc_link,
-            created_at=raw.get("createdAt"),
-            updated_at=raw.get("updatedAt")
-        )
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            
+            data = response.content
+            
+            # Check if data is gzip-compressed (starts with magic number 1f 8b)
+            if len(data) >= 2 and data[0] == 0x1f and data[1] == 0x8b:
+                logger.debug("Resource is gzip-compressed, decompressing...")
+                try:
+                    with gzip.GzipFile(fileobj=BytesIO(data)) as gz:
+                        json_data = gz.read().decode('utf-8')
+                except Exception as e:
+                    logger.error(f"Failed to decompress gzip data: {e}")
+                    raise
+            else:
+                # Plain JSON (possibly with UTF-8 BOM)
+                logger.debug("Resource is plain JSON")
+                json_data = data.decode('utf-8')
+                
+                # Remove UTF-8 BOM if present (ef bb bf)
+                if json_data.startswith('\ufeff'):
+                    json_data = json_data[1:]
+            
+            return json.loads(json_data)
+    
+    def _map_clash_data(
+        self,
+        clash_data: Dict[str, Any],
+        instance_data: Dict[str, Any],
+        document_data: Dict[str, Any]
+    ) -> List[Clash]:
+        """
+        Map the three resource files together to create Clash objects.
+        
+        Following the official tutorial mapping:
+        - clash_data: Contains clash IDs and stable object IDs
+        - instance_data: Maps clash IDs to viewable IDs
+        - document_data: Maps document IDs to URNs
+        
+        Args:
+            clash_data: Data from scope-version-clash.*.*.*.json.gz
+            instance_data: Data from scope-version-clash-instance.*.*.*.json.gz
+            document_data: Data from scope-version-document.*.*.*.json.gz
+            
+        Returns:
+            List of Clash objects
+        """
+        clashes: List[Clash] = []
+        
+        # Build document lookup: doc_id -> document info
+        documents = {}
+        for doc in document_data.get("documents", []):
+            doc_id = doc.get("id")
+            if doc_id is not None:
+                documents[doc_id] = doc
+        
+        # Build instance lookup: clash_id -> instance info
+        instances = {}
+        for instance in instance_data.get("instances", []):
+            cid = instance.get("cid")  # clash ID
+            if cid is not None:
+                if cid not in instances:
+                    instances[cid] = []
+                instances[cid].append(instance)
+        
+        # Process each clash
+        for clash in clash_data.get("clashes", []):
+            try:
+                clash_id = clash.get("id")
+                if clash_id is None:
+                    continue
+                
+                # Get instance data for this clash
+                clash_instances = instances.get(clash_id, [])
+                if len(clash_instances) < 2:
+                    logger.warning(f"Clash {clash_id} has fewer than 2 instances, skipping")
+                    continue
+                
+                # Typically there are 2 instances (left and right object)
+                left_instance = clash_instances[0]
+                right_instance = clash_instances[1] if len(clash_instances) > 1 else clash_instances[0]
+                
+                # Get document info
+                left_doc_id = left_instance.get("ldid")
+                right_doc_id = right_instance.get("rdid")
+                
+                left_doc = documents.get(left_doc_id, {})
+                right_doc = documents.get(right_doc_id, {})
+                
+                # Extract element information
+                element_a = Element(
+                    urn=left_doc.get("urn", ""),
+                    guid=str(left_instance.get("loid", "")),  # stable object ID
+                    name=left_instance.get("name", f"Object {left_instance.get('lvid', '')}"),
+                    category=left_instance.get("category", "")
+                )
+                
+                element_b = Element(
+                    urn=right_doc.get("urn", ""),
+                    guid=str(right_instance.get("roid", "")),  # stable object ID
+                    name=right_instance.get("name", f"Object {right_instance.get('rvid', '')}"),
+                    category=right_instance.get("category", "")
+                )
+                
+                # Extract location if available
+                location_data = clash.get("location", {})
+                location = Location(
+                    x=location_data.get("x", 0.0),
+                    y=location_data.get("y", 0.0),
+                    z=location_data.get("z", 0.0),
+                    level=location_data.get("level")
+                )
+                
+                # Determine severity based on distance or type
+                distance = clash.get("distance", 0)
+                if distance < 0.01:  # < 1cm
+                    severity = ClashSeverity.HIGH
+                elif distance < 0.05:  # < 5cm
+                    severity = ClashSeverity.MEDIUM
+                else:
+                    severity = ClashSeverity.LOW
+                
+                # Status - clashes from files are typically active
+                status = ClashStatus.OPEN
+                
+                # Build clash object parameters (don't pass None for timestamps)
+                clash_params = {
+                    "id": str(clash_id),
+                    "group_id": clash.get("groupId", "default"),
+                    "title": f"Clash {clash_id}",
+                    "status": status,
+                    "severity": severity,
+                    "discipline_a": left_doc.get("discipline", ""),
+                    "discipline_b": right_doc.get("discipline", ""),
+                    "element_a": element_a,
+                    "element_b": element_b,
+                    "location": location,
+                    "screenshot_url": None,
+                    "acc_link": f"https://acc.autodesk.com/projects/{self.project_id}/clashes/{clash_id}",
+                }
+                
+                # Only add timestamps if they exist (otherwise Pydantic will use default_factory)
+                created_at = clash.get("createdAt")
+                if created_at:
+                    clash_params["created_at"] = created_at
+                
+                updated_at = clash.get("updatedAt")
+                if updated_at:
+                    clash_params["updated_at"] = updated_at
+                
+                # Create clash object
+                clash_obj = Clash(**clash_params)
+                
+                clashes.append(clash_obj)
+                
+            except Exception as e:
+                logger.error(f"Failed to map clash {clash.get('id')}: {e}", exc_info=True)
+                continue
+        
+        return clashes
     
     async def fetch_all_clashes(self) -> List[Clash]:
         """
-        Fetch all clashes from the model set.
+        Fetch all clashes following the official APS tutorial workflow.
         
-        This iterates through clash tests and aggregates assigned clash groups.
+        Workflow:
+        1. Get latest model set version
+        2. Get clash tests for that version
+        3. For each test, get resource URLs
+        4. Download and decompress the 3 key resource files
+        5. Map the data together to create Clash objects
         """
-        logger.info("Fetching clashes from APS Model Coordination")
-        logger.info(f"Configured Model Set ID: {self.modelset_id}")
+        logger.info("Fetching clashes from APS Model Coordination (Official Workflow)")
+        logger.info(f"Model Set ID: {self.modelset_id}")
         logger.info(f"Container (Project) ID: {self.project_id}")
         
         all_clashes: List[Clash] = []
         
         try:
-            # If a specific MODELSET_ID is configured, use it directly
-            if self.modelset_id:
-                logger.info(f"Using configured Model Set ID: {self.modelset_id}")
-            else:
-                # Only try to list model sets if no specific ID is configured
-                logger.info("No Model Set ID configured, listing available model sets...")
-                model_sets = await self.list_model_sets()
-                logger.info(f"Found {len(model_sets)} model sets in project")
+            # Step 1: Get latest model set version
+            logger.info("Step 1: Getting latest model set version...")
+            version_data = await self.get_latest_model_set_version()
+            version_num = version_data.get("version")
+            version_status = version_data.get("status")
+            
+            logger.info(f"Latest version: {version_num}, Status: {version_status}")
+            
+            if version_status != "Successful":
+                logger.warning(f"Model set version {version_num} status is not 'Successful': {version_status}")
+                return []
+            
+            # Step 2: Get clash tests for this version
+            logger.info(f"Step 2: Getting clash tests for version {version_num}...")
+            clash_tests = await self.get_clash_tests_for_version(version_num)
+            
+            logger.info(f"Found {len(clash_tests)} clash tests")
+            
+            if not clash_tests:
+                logger.warning("No clash tests found for this model set version")
+                logger.info("Note: Clash tests must be created and run in ACC Model Coordination")
+                return []
+            
+            # Step 3-5: Process each clash test
+            for test in clash_tests:
+                test_id = test.get("id")
+                test_status = test.get("status")
                 
-                if model_sets:
-                    for ms in model_sets:
-                        logger.info(f"  - Model Set: {ms.get('name')} (ID: {ms.get('id')})")
-                    
-                    # Use the first available model set
-                    self.modelset_id = model_sets[0].get('id')
-                    logger.info(f"Using first model set: {model_sets[0].get('name')} ({self.modelset_id})")
-                else:
-                    logger.error("No model sets found in project!")
-                    return []
-            
-            # Try to get the latest model set version first
-            logger.info(f"Fetching latest version of model set: {self.modelset_id}")
-            
-            # Get latest version
-            version_url = (
-                f"{self.base_url}/bim360/modelset/v3/"
-                f"containers/{self.project_id}/modelsets/{self.modelset_id}/versions/latest"
-            )
-            
-            headers = await self._get_headers()
-            log_api_call(logger, "GET", version_url)
-            
-            async with httpx.AsyncClient(timeout=30.0) as client:
+                logger.info(f"Processing clash test {test_id} (Status: {test_status})")
+                
+                if test_status != "Success":
+                    logger.warning(f"Test {test_id} status is not 'Success': {test_status}, skipping")
+                    continue
+                
                 try:
-                    version_response = await client.get(version_url, headers=headers)
-                    version_response.raise_for_status()
-                    version_data = version_response.json()
-                    version_num = version_data.get("version")
-                    logger.info(f"Latest model set version: {version_num}")
+                    # Step 3: Get resource URLs
+                    logger.info(f"Step 3: Getting resource URLs for test {test_id}...")
+                    resources = await self.get_test_resources(test_id)
                     
-                    # Now try to get clash tests for this specific version
-                    tests_url = (
-                        f"{self.base_url}/bim360/clash/v3/"
-                        f"containers/{self.project_id}/modelsets/{self.modelset_id}/versions/{version_num}/tests"
-                    )
+                    logger.info(f"Found {len(resources)} resources")
                     
-                    log_api_call(logger, "GET", tests_url)
-                    tests_response = await client.get(tests_url, headers=headers)
-                    tests_response.raise_for_status()
+                    # Find the 3 key resource files
+                    clash_resource = None
+                    instance_resource = None
+                    document_resource = None
                     
-                    tests_data = tests_response.json()
-                    clash_tests = tests_data.get("results", [])
+                    for resource in resources:
+                        resource_type = resource.get("type", "")
+                        if "scope-version-clash." in resource_type and "instance" not in resource_type:
+                            clash_resource = resource
+                        elif "scope-version-clash-instance." in resource_type:
+                            instance_resource = resource
+                        elif "scope-version-document." in resource_type:
+                            document_resource = resource
                     
-                    logger.info(f"Found {len(clash_tests)} clash tests in version {version_num}")
-                    
-                    if clash_tests:
-                        for test in clash_tests:
-                            logger.info(f"  - Test: {test.get('name')} (ID: {test.get('id')})")
-                    
-                except httpx.HTTPStatusError as e:
-                    logger.warning(f"Could not fetch version-specific tests: {e.response.status_code}")
-                    logger.warning("Trying model-level tests endpoint...")
-                    
-                    # Fallback to model-level tests
-                    tests_url = (
-                        f"{self.base_url}/bim360/clash/v3/"
-                        f"containers/{self.project_id}/modelsets/{self.modelset_id}/tests"
-                    )
-                    
-                    log_api_call(logger, "GET", tests_url)
-                    tests_response = await client.get(tests_url, headers=headers)
-                    tests_response.raise_for_status()
-                    
-                    tests_data = tests_response.json()
-                    clash_tests = tests_data.get("results", [])
-                    logger.info(f"Found {len(clash_tests)} clash tests at model level")
-                
-                if not clash_tests:
-                    logger.warning("No clash tests found! This model set may not have any configured tests.")
-                    logger.info("Note: Clash tests must be created and run in ACC Model Coordination before they appear in the API")
-                    return []
-                
-                # Fetch clashes from each test
-                for test in clash_tests:
-                    test_id = test.get("id")
-                    test_name = test.get("name", "Unnamed")
-                    
-                    if not test_id:
+                    if not all([clash_resource, instance_resource, document_resource]):
+                        logger.warning(f"Missing required resources for test {test_id}")
+                        logger.debug(f"clash: {bool(clash_resource)}, instance: {bool(instance_resource)}, document: {bool(document_resource)}")
                         continue
                     
-                    logger.info(f"Fetching clashes for test '{test_name}' (ID: {test_id})")
+                    # Step 4: Download and decompress each resource
+                    logger.info("Step 4: Downloading and decompressing resources...")
                     
-                    # Try to get assigned clash groups for this test
-                    try:
-                        offset = 0
-                        limit = 100
-                        
-                        while True:
-                            clash_groups = await self.get_assigned_clash_groups(test_id, offset, limit)
-                            
-                            if not clash_groups:
-                                break
-                            
-                            logger.debug(f"Retrieved {len(clash_groups)} clash groups (offset={offset})")
-                            
-                            # Normalize and add clashes
-                            for raw_clash in clash_groups:
-                                try:
-                                    clash = self._normalize_clash(raw_clash)
-                                    all_clashes.append(clash)
-                                except Exception as e:
-                                    logger.error(f"Failed to normalize clash: {e}", exc_info=True)
-                                    logger.debug(f"Raw clash data: {raw_clash}")
-                            
-                            # Check if more pages
-                            if len(clash_groups) < limit:
-                                break
-                            
-                            offset += limit
+                    logger.info("Downloading clash data...")
+                    clash_data = await self.download_and_decompress_resource(clash_resource["url"])
                     
-                    except httpx.HTTPStatusError as e:
-                        if e.response.status_code == 404:
-                            logger.warning(f"No assigned clashes found for test {test_id}")
-                        else:
-                            logger.error(f"Error fetching clashes for test {test_id}: {e}")
-                    except Exception as e:
-                        logger.error(f"Error fetching clashes for test {test_id}: {e}")
+                    logger.info("Downloading instance data...")
+                    instance_data = await self.download_and_decompress_resource(instance_resource["url"])
+                    
+                    logger.info("Downloading document data...")
+                    document_data = await self.download_and_decompress_resource(document_resource["url"])
+                    
+                    # Step 5: Map data together
+                    logger.info("Step 5: Mapping clash data...")
+                    test_clashes = self._map_clash_data(clash_data, instance_data, document_data)
+                    
+                    logger.info(f"Mapped {len(test_clashes)} clashes from test {test_id}")
+                    all_clashes.extend(test_clashes)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing test {test_id}: {e}", exc_info=True)
+                    continue
             
-            logger.info(f"Successfully fetched {len(all_clashes)} clashes from APS")
+            logger.info(f"✅ Successfully fetched {len(all_clashes)} clashes from APS")
             return all_clashes
             
         except httpx.HTTPStatusError as e:

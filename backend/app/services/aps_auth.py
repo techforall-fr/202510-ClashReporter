@@ -83,7 +83,7 @@ class APSAuthClient:
         
         log_api_call(logger, "POST", self.auth_url)
         
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        async with httpx.AsyncClient(timeout=100.0) as client:
             response = await client.post(self.auth_url, data=data)
             response.raise_for_status()
             
@@ -123,7 +123,7 @@ class APSAuthClient:
         
         log_api_call(logger, "POST", self.auth_url)
         
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        async with httpx.AsyncClient(timeout=100.0) as client:
             response = await client.post(self.auth_url, data=data)
             response.raise_for_status()
             
@@ -164,7 +164,7 @@ class APSAuthClient:
         
         log_api_call(logger, "POST", self.auth_url)
         
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        async with httpx.AsyncClient(timeout=100.0) as client:
             response = await client.post(self.auth_url, data=data)
             response.raise_for_status()
             
