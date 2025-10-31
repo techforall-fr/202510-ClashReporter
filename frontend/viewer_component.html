@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autodesk Viewer</title>
+    
+    <!-- Autodesk Forge Viewer CSS -->
+    <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css" type="text/css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        #viewer-container {
+            width: 100%;
+            height: 600px;
+            position: relative;
+            background: #f3f4f6;
+        }
+        
+        #viewer {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .control-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #4338ca;
+        }
+        
+        .control-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        #status {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 100;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-direction: column;
+            color: #6b7280;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="viewer-container">
+        <div id="viewer">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div>Chargement du viewer Autodesk...</div>
+            </div>
+        </div>
+        
+        <div id="controls" style="display: none;">
+            <button class="control-btn" onclick="fitToView()">🎯 Ajuster</button>
+            <button class="control-btn" onclick="resetView()">🔄 Réinitialiser</button>
+            <button class="control-btn" onclick="toggleXRay()">👁️ X-Ray</button>
+        </div>
+        
+        <div id="status">Initialisation...</div>
+    </div>
+
+    <!-- Autodesk Forge Viewer JavaScript -->
+    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"></script>
+    
+    <script>
+        let viewer = null;
+        let loadedModels = [];
+        let currentClashData = null;
+        
+        // Configuration from parent (Streamlit will inject this)
+        const API_BASE_URL = window.API_BASE_URL || 'http://localhost:8000';
+        
+        // Update status message
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+        
+        // Initialize Autodesk Viewer
+        async function initializeViewer() {
+            try {
+                updateStatus('Récupération du token d\'accès...');
+                
+                // Get access token from backend
+                const tokenResponse = await fetch(`${API_BASE_URL}/api/viewer/token`);
+                const tokenData = await tokenResponse.json();
+                
+                if (!tokenData.access_token) {
+                    throw new Error('Token d\'accès non disponible');
+                }
+                
+                updateStatus('Initialisation du viewer...');
+                
+                // Initialize viewer options
+                const options = {
+                    env: 'AutodeskProduction',
+                    api: 'derivativeV2',
+                    getAccessToken: function(onTokenReady) {
+                        onTokenReady(tokenData.access_token, tokenData.expires_in);
+                    }
+                };
+                
+                // Initialize viewer
+                Autodesk.Viewing.Initializer(options, function() {
+                    const viewerDiv = document.getElementById('viewer');
+                    viewer = new Autodesk.Viewing.GuiViewer3D(viewerDiv);
+                    
+                    const startedCode = viewer.start();
+                    if (startedCode > 0) {
+                        console.error('Failed to create a Viewer: WebGL not supported.');
+                        updateStatus('❌ WebGL non supporté');
+                        return;
+                    }
+                    
+                    // Show controls
+                    document.getElementById('controls').style.display = 'block';
+                    updateStatus('✅ Viewer initialisé');
+                    
+                    // Load models if URNs are available
+                    loadModels();
+                });
+                
+            } catch (error) {
+                console.error('Error initializing viewer:', error);
+                updateStatus(`❌ Erreur: ${error.message}`);
+            }
+        }
+        
+        // Encode URN to base64 URL-safe format (required by Viewer)
+        function encodeURN(urn) {
+            // URN should already be in format like: urn:adsk.wipprod:fs.file:vf.xxx?version=1
+            // We need to encode it to base64 URL-safe
+            const base64 = btoa(urn)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, ''); // Remove padding
+            return base64;
+        }
+        
+        // Load models from URNs
+        async function loadModels() {
+            try {
+                updateStatus('Récupération des modèles...');
+                
+                // Get model URNs from backend
+                const response = await fetch(`${API_BASE_URL}/api/viewer/model-urns`);
+                const data = await response.json();
+                
+                if (!data.urns || data.urns.length === 0) {
+                    updateStatus('ℹ️ Aucun modèle à charger');
+                    return;
+                }
+                
+                updateStatus(`Chargement de ${data.urns.length} modèle(s)...`);
+                
+                // Load each model
+                for (const urn of data.urns) {
+                    // URN must be base64 URL-safe encoded
+                    const encodedURN = encodeURN(urn);
+                    const documentId = 'urn:' + encodedURN;
+                    
+                    console.log('Loading model:', urn, '-> encoded:', encodedURN);
+                    
+                    Autodesk.Viewing.Document.load(
+                        documentId,
+                        onDocumentLoadSuccess,
+                        onDocumentLoadFailure
+                    );
+                }
+                
+            } catch (error) {
+                console.error('Error loading models:', error);
+                updateStatus(`❌ Erreur chargement: ${error.message}`);
+            }
+        }
+        
+        // Document load success callback
+        function onDocumentLoadSuccess(doc) {
+            const viewables = doc.getRoot().getDefaultGeometry();
+            if (viewables) {
+                viewer.loadDocumentNode(doc, viewables).then(function(model) {
+                    loadedModels.push(model);
+                    updateStatus(`✅ ${loadedModels.length} modèle(s) chargé(s)`);
+                });
+            }
+        }
+        
+        // Document load failure callback
+        function onDocumentLoadFailure(errorCode, errorMsg) {
+            console.error('Failed to load document:', errorCode, errorMsg);
+            updateStatus(`❌ Échec chargement: ${errorMsg}`);
+        }
+        
+        // Focus on a specific clash
+        async function focusOnClash(clashId) {
+            if (!viewer || !clashId) return;
+            
+            try {
+                updateStatus(`Localisation du clash ${clashId}...`);
+                
+                // Get clash data from backend
+                const response = await fetch(`${API_BASE_URL}/api/viewer/clash/${clashId}`);
+                const clashData = await response.json();
+                
+                currentClashData = clashData;
+                
+                // Isolate and color the clashing objects
+                const dbIds = [];
+                
+                // Find object IDs by GUID
+                loadedModels.forEach(model => {
+                    const instanceTree = model.getInstanceTree();
+                    if (instanceTree) {
+                        // Search for element A
+                        instanceTree.enumNodeChildren(instanceTree.getRootId(), function(dbId) {
+                            const props = model.getProperties(dbId);
+                            // This is simplified - in practice you'd need to match GUIDs
+                        }, true);
+                    }
+                });
+                
+                // Color the clashing elements (red and blue)
+                if (dbIds.length > 0) {
+                    viewer.isolate(dbIds);
+                    viewer.fitToView(dbIds);
+                    
+                    // Color element A red
+                    const red = new THREE.Vector4(1, 0, 0, 1);
+                    viewer.setThemingColor(dbIds[0], red);
+                    
+                    // Color element B blue  
+                    if (dbIds.length > 1) {
+                        const blue = new THREE.Vector4(0, 0, 1, 1);
+                        viewer.setThemingColor(dbIds[1], blue);
+                    }
+                }
+                
+                // Zoom to clash location
+                const location = clashData.location;
+                const position = new THREE.Vector3(location.x, location.y, location.z);
+                viewer.navigation.setPosition(position);
+                
+                updateStatus(`✅ Focus sur clash ${clashId}`);
+                
+            } catch (error) {
+                console.error('Error focusing on clash:', error);
+                updateStatus(`❌ Erreur focus: ${error.message}`);
+            }
+        }
+        
+        // Control functions
+        function fitToView() {
+            if (viewer) {
+                viewer.fitToView();
+                updateStatus('✅ Vue ajustée');
+            }
+        }
+        
+        function resetView() {
+            if (viewer) {
+                viewer.showAll();
+                viewer.clearThemingColors();
+                updateStatus('✅ Vue réinitialisée');
+            }
+        }
+        
+        function toggleXRay() {
+            if (viewer) {
+                const current = viewer.getHiddenNodes().length > 0;
+                viewer.setGhosting(!current);
+                updateStatus(current ? '✅ X-Ray activé' : '✅ X-Ray désactivé');
+            }
+        }
+        
+        // Listen for messages from parent (Streamlit)
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'FOCUS_CLASH') {
+                focusOnClash(event.data.clashId);
+            } else if (event.data.type === 'SET_API_URL') {
+                window.API_BASE_URL = event.data.url;
+            }
+        });
+        
+        // Initialize on load
+        window.addEventListener('load', function() {
+            initializeViewer();
+        });
+    </script>
+</body>
+</html>

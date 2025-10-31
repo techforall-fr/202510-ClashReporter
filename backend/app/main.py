@@ -7,6 +7,7 @@ from app.api.routes_clashes import router as clashes_router
 from app.api.routes_kpis import router as kpis_router
 from app.api.routes_report import router as report_router
 from app.api.routes_tokens import router as tokens_router
+from app.api.routes_viewer import router as viewer_router
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
 
@@ -38,6 +39,7 @@ app.include_router(clashes_router)
 app.include_router(kpis_router)
 app.include_router(tokens_router)
 app.include_router(report_router)
+app.include_router(viewer_router)
 
 
 @app.get("/api/health")

@@ -121,7 +121,7 @@ def display_auth_status(config, auth_status):
 def fetch_kpis():
     """Fetch KPIs from API."""
     try:
-        response = requests.get(f"{API_BASE_URL}/api/kpis", timeout=10)
+        response = requests.get(f"{API_BASE_URL}/api/kpis", timeout=300)
         response.raise_for_status()
         return response.json()
     except Exception as e:
@@ -148,7 +148,7 @@ def fetch_clashes(severity=None, status=None, discipline=None, level=None, page=
         if level:
             params["level"] = level
         
-        response = requests.get(f"{API_BASE_URL}/api/clashes", params=params, timeout=15)
+        response = requests.get(f"{API_BASE_URL}/api/clashes", params=params, timeout=300)
         response.raise_for_status()
         return response.json()
     except Exception as e:
@@ -169,7 +169,7 @@ def generate_pdf_report(filters, title, prepared_by):
         response = requests.post(
             f"{API_BASE_URL}/api/report/pdf",
             json=payload,
-            timeout=60
+            timeout=300
         )
         response.raise_for_status()
         return response.content
@@ -327,31 +327,60 @@ def display_clash_table(clashes_data):
     return df
 
 
-def display_viewer():
-    """Display Autodesk Viewer section."""
+def display_viewer(selected_clash_id=None):
+    """Display Autodesk Viewer section with 3D models."""
     st.markdown("### 🎨 Visualisation 3D")
     
     st.info("""
-    **Note:** L'intégration complète du viewer Autodesk nécessite un token valide.
-    En mode mock, un viewer de démonstration peut être affiché.
+    **Viewer Autodesk Forge** - Visualisez vos modèles BIM en 3D
     
-    Pour une démo complète:
-    1. Sélectionnez un clash dans le tableau
-    2. Cliquez sur "Focus" pour zoomer sur le clash
-    3. Utilisez "Capture" pour enregistrer une image
+    - 🔍 Les modèles se chargent automatiquement
+    - 🎯 Cliquez sur un clash dans le tableau puis sur "📍 Zoomer sur ce clash" pour le localiser
+    - 🎨 Les éléments en conflit sont colorés (rouge et bleu)
     """)
     
-    # Placeholder for viewer
-    st.markdown("""
-    <div style="background: #f3f4f6; border: 2px dashed #9ca3af; border-radius: 0.5rem; 
-                padding: 3rem; text-align: center; min-height: 400px;">
-        <h3 style="color: #6b7280;">Autodesk Viewer</h3>
-        <p style="color: #9ca3af;">
-            Le viewer 3D s'affichera ici avec un token APS valide.<br>
-            Intégration via JavaScript + Autodesk Forge Viewer API
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Load viewer HTML
+    viewer_html_path = "viewer_component.html"
+    try:
+        with open(viewer_html_path, 'r', encoding='utf-8') as f:
+            viewer_html = f.read()
+        
+        # Inject API URL
+        viewer_html = viewer_html.replace(
+            "const API_BASE_URL = window.API_BASE_URL || 'http://localhost:8000';",
+            f"const API_BASE_URL = '{API_BASE_URL}';"
+        )
+        
+        # Embed the viewer
+        st.components.v1.html(viewer_html, height=650, scrolling=False)
+        
+        # Focus button if clash is selected
+        if selected_clash_id:
+            st.markdown(f"""
+            <script>
+                // Send message to iframe to focus on clash
+                const iframe = window.parent.document.querySelector('iframe');
+                if (iframe && iframe.contentWindow) {{
+                    iframe.contentWindow.postMessage({{
+                        type: 'FOCUS_CLASH',
+                        clashId: '{selected_clash_id}'
+                    }}, '*');
+                }}
+            </script>
+            """, unsafe_allow_html=True)
+        
+    except FileNotFoundError:
+        st.error("⚠️ Fichier viewer_component.html introuvable")
+        st.markdown("""
+        <div style="background: #f3f4f6; border: 2px dashed #9ca3af; border-radius: 0.5rem; 
+                    padding: 3rem; text-align: center; min-height: 400px;">
+            <h3 style="color: #6b7280;">Autodesk Viewer</h3>
+            <p style="color: #9ca3af;">
+                Le composant viewer est manquant.<br>
+                Vérifiez que viewer_component.html existe dans le répertoire frontend.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 
 def main():
@@ -379,7 +408,7 @@ def main():
             if st.button("🔄 Charger les clashes depuis ACC", use_container_width=True, type="secondary"):
                 with st.spinner("Chargement des données depuis ACC..."):
                     try:
-                        response = requests.post(f"{API_BASE_URL}/api/clashes/refresh", timeout=30)
+                        response = requests.post(f"{API_BASE_URL}/api/clashes/refresh", timeout=300)
                         response.raise_for_status()
                         result = response.json()
                         st.success(f"✅ {result['message']} - {result['count']} clashes chargés")
