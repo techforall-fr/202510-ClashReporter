@@ -1,0 +1,91 @@
+{
+  "app": {
+    "title": "Smart Clash Reporter",
+    "description": "API for BIM model coordination and clash report generation",
+    "version": "1.0.0",
+    "subtitle": "Coordination of BIM models with Autodesk ACC",
+    "footer": "Smart Clash Reporter v1.0 | Powered by Autodesk ACC + FastAPI + Streamlit"
+  },
+  "auth": {
+    "login_success": "Successfully logged in",
+    "login_button": "🔐 Login with Autodesk",
+    "logout_button": "🚪 Logout",
+    "logout_success": "Logged out successfully",
+    "auth_required": "⚠️ LIVE mode requires Autodesk authentication",
+    "auth_description": "To access real data from your ACC/BIM 360 project, you must log in with your Autodesk account.",
+    "logged_in": "✅ Connected with Autodesk account"
+  },
+  "errors": {
+    "backend_connection": "Unable to connect to backend: {error}",
+    "logout_error": "Error during logout: {error}",
+    "kpis_fetch": "Error fetching KPIs: {error}",
+    "clashes_fetch": "Error fetching clashes: {error}",
+    "report_generation": "Error generating report: {error}",
+    "refresh_error": "Error during refresh: {error}",
+    "auth_error": "Authentication error: {error}",
+    "auth_failure": "Failed to complete authentication: {error}",
+    "no_auth_code": "No authorization code received"
+  },
+  "messages": {
+    "report_generated": "✅ Report generated successfully!",
+    "data_refreshed": "✅ {message} - {count} clashes loaded",
+    "loading_data": "Loading data from ACC...",
+    "generation_loading": "Report generation in progress...",
+    "no_clashes": "No clashes found."
+  },
+  "ui": {
+    "severity": "Severity",
+    "status": "Status",
+    "discipline": "Discipline",
+    "level": "Level",
+    "title_report": "Report Title",
+    "prepared_by": "Prepared by",
+    "generate_pdf": "🚀 Generate PDF",
+    "download_csv": "📥 Export CSV",
+    "refresh_clashes": "🔄 Load clashes from ACC",
+    "download_pdf": "⬇️ Download PDF",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "open": "Open",
+    "resolved": "Resolved",
+    "suppressed": "Suppressed",
+    "total_clashes": "Total Clashes",
+    "high_severity": "High Severity",
+    "open_clashes": "Open",
+    "resolved_percentage": "Resolved",
+    "clash_list": "📋 Clash List",
+    "kpi_title": "### 📊 Key Indicators",
+    "severity_distribution": "Severity Distribution",
+    "status_pie": "Status Distribution",
+    "viewer_title": "### 🎨 3D Visualization",
+    "viewer_info": "**Autodesk Forge Viewer** - Visualize your BIM models in 3D\n\n- 🔍 Models load automatically\n- 🎯 Click on a clash in the table then on \"📍 Focus on this clash\" to locate it\n- 🎨 Conflicting elements are colored (red and blue)"
+  },
+  "severity_labels": {
+    "high": "High",
+    "medium": "Medium", 
+    "low": "Low"
+  },
+  "status_labels": {
+    "open": "Open",
+    "resolved": "Resolved",
+    "suppressed": "Suppressed"
+  },
+  "table": {
+    "id": "ID",
+    "title": "Title",
+    "severity": "Severity",
+    "status": "Status",
+    "disciplines": "Disciplines",
+    "level": "Level",
+    "element_a": "Element A",
+    "element_b": "Element B"
+  },
+  "viewer": {
+    "file_missing": "⚠️ viewer_component.html file not found",
+    "missing_description": "Check that viewer_component.html exists in the frontend directory."
+  },
+  "pagination": {
+    "page_info": "Page {page} / {total_pages} - Total: {total} clashes"
+  }
+}

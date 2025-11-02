@@ -1,45 +1,46 @@
 # Contributing to Smart Clash Reporter
 
-Merci de votre intérêt pour contribuer à Smart Clash Reporter! 🎉
+Thank you for your interest in contributing to Smart Clash Reporter! 🎉
 
-## 📋 Table des matières
+## 📋 Table of Contents
 
-- [Code de conduite](#code-de-conduite)
-- [Comment contribuer](#comment-contribuer)
-- [Standards de code](#standards-de-code)
-- [Process de review](#process-de-review)
-- [Reporting bugs](#reporting-bugs)
+- [Code of Conduct](#code-of-conduct)
+- [How to Contribute](#how-to-contribute)
+- [Code Standards](#code-standards)
+- [Review Process](#review-process)
+- [Reporting Bugs](#reporting-bugs)
 
-## Code de conduite
+## Code of Conduct
 
-Ce projet adhère à un code de conduite. En participant, vous acceptez de maintenir un environnement respectueux et inclusif.
+This project adheres to a code of conduct. By participating, you agree to maintain a respectful and inclusive environment.
 
-## Comment contribuer
+## How to Contribute
 
 ### 1. Fork & Clone
 
 ```bash
-# Fork sur GitHub, puis:
-git clone https://github.com/votre-username/smart-clash-reporter.git
+# Fork on GitHub, then:
+git clone https://github.com/your-username/smart-clash-reporter.git
 cd smart-clash-reporter
 ```
 
-### 2. Créer une branche
+### 2. Create a Branch
 
 ```bash
-git checkout -b feature/ma-nouvelle-fonctionnalite
-# ou
-git checkout -b fix/correction-bug
+git checkout -b feature/my-new-feature
+# or
+git checkout -b fix/bug-fix
 ```
 
-**Conventions de nommage:**
-- `feature/` - Nouvelles fonctionnalités
-- `fix/` - Corrections de bugs
-- `docs/` - Modifications de documentation
-- `refactor/` - Refactoring de code
-- `test/` - Ajout de tests
+**Naming Conventions:**
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation changes
+- `refactor/` - Code refactoring
+- `test/` - Adding tests
+- `chore/` - Maintenance
 
-### 3. Setup environnement
+### 3. Setup Environment
 
 ```bash
 # Backend
@@ -52,13 +53,13 @@ cd ../frontend
 pip install -r requirements.txt
 ```
 
-### 4. Faire vos modifications
+### 4. Make Your Changes
 
-- Écrivez du code propre et documenté
-- Ajoutez des tests si applicable
-- Mettez à jour la documentation
+- Write clean and documented code
+- Add tests if applicable
+- Update documentation
 
-### 5. Tester
+### 5. Test
 
 ```bash
 cd backend
@@ -69,7 +70,7 @@ make format        # Format code
 
 ### 6. Commit
 
-Utilisez des messages de commit conventionnels:
+Use conventional commit messages:
 
 ```bash
 git commit -m "feat: add clash filtering by category"
@@ -87,37 +88,37 @@ git commit -m "docs: update API documentation"
 ```
 
 **Types:**
-- `feat`: Nouvelle fonctionnalité
-- `fix`: Correction de bug
+- `feat`: New feature
+- `fix`: Bug fix
 - `docs`: Documentation
 - `style`: Formatting, missing semi-colons, etc.
-- `refactor`: Refactoring de code
-- `test`: Ajout de tests
+- `refactor`: Code refactoring
+- `test`: Adding tests
 - `chore`: Maintenance
 
 ### 7. Push & Pull Request
 
 ```bash
-git push origin feature/ma-nouvelle-fonctionnalite
+git push origin feature/my-new-feature
 ```
 
-Puis créez une Pull Request sur GitHub avec:
-- Titre descriptif
-- Description détaillée des changements
-- Référence aux issues liées (si applicable)
-- Screenshots (si changements UI)
+Then create a Pull Request on GitHub with:
+- Descriptive title
+- Detailed description of changes
+- Reference to related issues (if applicable)
+- Screenshots (if UI changes)
 
-## Standards de code
+## Code Standards
 
 ### Python (Backend)
 
 **Style:**
 - PEP 8
-- Line length: 100 caractères
-- Type hints obligatoires
-- Docstrings pour fonctions publiques
+- Line length: 100 characters
+- Type hints required
+- Docstrings for public functions
 
-**Exemple:**
+**Example:**
 ```python
 def calculate_kpis(clashes: List[Clash]) -> KPIs:
     """
@@ -133,7 +134,7 @@ def calculate_kpis(clashes: List[Clash]) -> KPIs:
     pass
 ```
 
-**Outils:**
+**Tools:**
 - `black` - Formatting
 - `ruff` - Linting
 - `mypy` - Type checking
@@ -141,13 +142,13 @@ def calculate_kpis(clashes: List[Clash]) -> KPIs:
 ### Streamlit (Frontend)
 
 **Style:**
-- Code clair et lisible
-- Commentaires pour logique complexe
-- Fonctions réutilisables
+- Clear and readable code
+- Comments for complex logic
+- Reusable functions
 
 ### Tests
 
-**Couverture minimale:** 70%
+**Minimum Coverage:** 70%
 
 **Structure:**
 ```python
@@ -165,95 +166,95 @@ def test_function_name():
 
 ### Documentation
 
-- README.md à jour
-- Docstrings pour nouvelles fonctions
-- Commentaires inline pour logique complexe
+- Updated README.md
+- Docstrings for new functions
+- Inline comments for complex logic
 - API documentation (Swagger)
 
-## Process de review
+## Review Process
 
 1. **Automated checks**
-   - Tests passent ✅
-   - Lint sans erreurs ✅
+   - Tests pass ✅
+   - Lint without errors ✅
    - Type checking OK ✅
 
 2. **Code review**
-   - Minimum 1 approbation requise
-   - Réponse aux commentaires
-   - Itération si nécessaire
+   - Minimum 1 approval required
+   - Respond to comments
+   - Iterate if necessary
 
 3. **Merge**
-   - Squash and merge (par défaut)
-   - Delete branch après merge
+   - Squash and merge (default)
+   - Delete branch after merge
 
-## Reporting bugs
+## Reporting Bugs
 
-### Avant de créer une issue
+### Before Creating an Issue
 
-- [ ] Vérifier les issues existantes
-- [ ] Reproduire le bug
-- [ ] Collecter les informations système
+- [ ] Check existing issues
+- [ ] Reproduce the bug
+- [ ] Collect system information
 
-### Template d'issue
+### Issue Template
 
 ```markdown
 **Description**
-Description claire et concise du bug.
+Clear and concise description of the bug.
 
-**Étapes pour reproduire**
-1. Aller à '...'
-2. Cliquer sur '...'
-3. Voir l'erreur
+**Steps to Reproduce**
+1. Go to '...'
+2. Click on '...'
+3. See the error
 
-**Comportement attendu**
-Ce qui devrait se passer.
+**Expected Behavior**
+What should happen.
 
-**Comportement actuel**
-Ce qui se passe réellement.
+**Actual Behavior**
+What actually happens.
 
 **Screenshots**
-Si applicable.
+If applicable.
 
-**Environnement:**
+**Environment:**
 - OS: [e.g. Windows 11]
 - Python: [e.g. 3.11.5]
 - Version: [e.g. 1.0.0]
 
-**Logs/Erreurs**
+**Logs/Errors**
 ```
-Coller les logs ici
-```
-
-**Contexte additionnel**
-Toute information supplémentaire.
+Paste logs here
 ```
 
-## Proposer des features
+**Additional Context**
+Any additional information.
+```
 
-### Template de feature request
+## Suggesting Features
+
+### Feature Request Template
 
 ```markdown
-**Problème à résoudre**
-Description du problème ou besoin.
+**Problem to Solve**
+Description of the problem or need.
 
-**Solution proposée**
-Comment vous imaginez la solution.
+**Proposed Solution**
+How you imagine the solution.
 
-**Alternatives considérées**
-Autres approches possibles.
+**Alternatives Considered**
+Other possible approaches.
 
-**Contexte additionnel**
+**Additional Context**
 Screenshots, mockups, etc.
 ```
 
 ## Questions?
 
-- Ouvrir une discussion GitHub
-- Contacter les maintainers
-- Consulter la documentation
+- Open a GitHub discussion
+- Contact the maintainers
+- Check the documentation
 
-## Remerciements
+## Acknowledgments
 
-Merci de contribuer à Smart Clash Reporter! 🙏
+Thank you for contributing to Smart Clash Reporter! 🙏
 
-Vos contributions aident la communauté BIM à automatiser et améliorer les processus de coordination.
+Your contributions help the BIM community automate and improve coordination processes.

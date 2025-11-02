@@ -175,14 +175,19 @@ class PDFReportGenerator:
             # Subsection
             elements.append(Paragraph(f"{severity_name} ({len(clash_group)} clashes)", self.heading_style))
             elements.append(Spacer(1, 0.3*cm))
-            
-            # Limit to first 20 per severity to keep PDF manageable
-            for clash in clash_group[:20]:
+
+            # Include all clashes per severity group
+            for clash in clash_group:
+                # Normalize status value for display
+                status_value = getattr(clash.status, 'value', clash.status)
+                status_label = str(status_value).capitalize()
+                
                 # Clash info
                 clash_data = [
                     ['ID', clash.id],
                     ['Titre', clash.title],
-                    ['Statut', clash.status.value.capitalize()],
+                    ['Statut', status_label],
+                    ['Assigné à', clash.assigned_to or 'N/A'],
                     ['Disciplines', f"{clash.discipline_a} vs {clash.discipline_b}"],
                     ['Élément A', f"{clash.element_a.name} ({clash.element_a.category})"],
                     ['Élément B', f"{clash.element_b.name} ({clash.element_b.category})"],
@@ -216,13 +221,7 @@ class PDFReportGenerator:
                             logger.warning(f"Could not add screenshot for {clash.id}: {e}")
                 
                 elements.append(Spacer(1, 0.5*cm))
-            
-            if len(clash_group) > 20:
-                elements.append(Paragraph(
-                    f"<i>... et {len(clash_group) - 20} autres clashes de {severity_name.lower()}</i>",
-                    self.styles['Italic']
-                ))
-            
+
             elements.append(Spacer(1, 0.5*cm))
         
         return elements

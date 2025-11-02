@@ -62,7 +62,7 @@ async def generate_pdf_report(request: ReportRequest):
     try:
         # Get clashes with filters
         clash_service = get_clash_service()
-        
+
         # Parse filters
         clash_filter = ClashFilter(
             severity=request.filters.get("severity"),
@@ -70,11 +70,22 @@ async def generate_pdf_report(request: ReportRequest):
             discipline=request.filters.get("discipline"),
             level=request.filters.get("level"),
             page=1,
-            page_size=1000  # Get all for report
+            page_size=10000  # Large limit for report (get all clashes)
         )
-        
-        response = await clash_service.query_clashes(clash_filter)
-        clashes = response.clashes
+
+        # Get all clashes (not just first page) for comprehensive report
+        all_clashes = []
+        page = 1
+        while True:
+            clash_filter.page = page
+            response = await clash_service.query_clashes(clash_filter)
+            all_clashes.extend(response.clashes)
+
+            if len(all_clashes) >= response.total or page >= response.total_pages:
+                break
+            page += 1
+
+        clashes = all_clashes
         
         # Calculate KPIs
         kpis = calculate_kpis(clashes)

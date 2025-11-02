@@ -73,20 +73,25 @@ def create_status_chart(kpis: KPIs, output_path: Optional[Path] = None) -> bytes
     colors = ['#ef4444', '#22c55e', '#94a3b8']
     explode = (0.05, 0.05, 0)
     
-    # Only show non-zero values
-    filtered_data = [(l, s, c, e) for l, s, c, e in zip(labels, sizes, colors, explode) if s > 0]
-    if filtered_data:
-        labels, sizes, colors, explode = zip(*filtered_data)
-    
-    ax.pie(
-        sizes, 
-        labels=labels, 
-        colors=colors,
-        autopct='%1.1f%%',
-        startangle=90,
-        explode=explode
-    )
+    total = sum(sizes)
     ax.set_title('Distribution par statut')
+    if total == 0:
+        ax.text(0.5, 0.5, 'Aucune donnée', ha='center', va='center')
+        ax.axis('off')
+    else:
+        # Only show non-zero values
+        filtered_data = [(l, s, c, e) for l, s, c, e in zip(labels, sizes, colors, explode) if s > 0]
+        if filtered_data:
+            labels, sizes, colors, explode = zip(*filtered_data)
+        
+        ax.pie(
+            list(sizes), 
+            labels=list(labels), 
+            colors=list(colors),
+            autopct='%1.1f%%',
+            startangle=90,
+            explode=list(explode)
+        )
     
     plt.tight_layout()
     

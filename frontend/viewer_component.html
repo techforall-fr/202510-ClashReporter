@@ -129,6 +129,13 @@
         function updateStatus(message) {
             document.getElementById('status').textContent = message;
         }
+
+        function hideLoader() {
+            const loader = document.querySelector('#viewer .loading');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }
         
         // Initialize Autodesk Viewer
         async function initializeViewer() {
@@ -163,6 +170,7 @@
                     if (startedCode > 0) {
                         console.error('Failed to create a Viewer: WebGL not supported.');
                         updateStatus('❌ WebGL non supporté');
+                        hideLoader();
                         return;
                     }
                     
@@ -177,6 +185,7 @@
             } catch (error) {
                 console.error('Error initializing viewer:', error);
                 updateStatus(`❌ Erreur: ${error.message}`);
+                hideLoader();
             }
         }
         
@@ -202,6 +211,7 @@
                 
                 if (!data.urns || data.urns.length === 0) {
                     updateStatus('ℹ️ Aucun modèle à charger');
+                    hideLoader();
                     return;
                 }
                 
@@ -225,6 +235,7 @@
             } catch (error) {
                 console.error('Error loading models:', error);
                 updateStatus(`❌ Erreur chargement: ${error.message}`);
+                hideLoader();
             }
         }
         
@@ -235,6 +246,7 @@
                 viewer.loadDocumentNode(doc, viewables).then(function(model) {
                     loadedModels.push(model);
                     updateStatus(`✅ ${loadedModels.length} modèle(s) chargé(s)`);
+                    hideLoader();
                 });
             }
         }
@@ -243,6 +255,7 @@
         function onDocumentLoadFailure(errorCode, errorMsg) {
             console.error('Failed to load document:', errorCode, errorMsg);
             updateStatus(`❌ Échec chargement: ${errorMsg}`);
+            hideLoader();
         }
         
         // Focus on a specific clash

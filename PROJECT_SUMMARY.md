@@ -2,222 +2,222 @@
 
 ## ✅ Project Status: COMPLETE
 
-Livraison complète d'un outil clé-en-main pour la coordination BIM avec Autodesk ACC/MCP.
+Complete delivery of a turnkey tool for BIM coordination with Autodesk ACC/MCP.
 
 ---
 
-## 📂 Structure du Projet Livré
+## 📂 Delivered Project Structure
 
 ```
 smart-clash-reporter/
-├── backend/                          # API Python (FastAPI)
+├── backend/                          # Python API (FastAPI)
 │   ├── app/
-│   │   ├── api/                      # Routes REST
-│   │   │   ├── routes_clashes.py     # Endpoints clashes
-│   │   │   ├── routes_kpis.py        # Endpoints KPIs
-│   │   │   ├── routes_tokens.py      # Tokens viewer
-│   │   │   └── routes_report.py      # Génération rapports
+│   │   ├── api/                      # REST Routes
+│   │   │   ├── routes_clashes.py     # Clash endpoints
+│   │   │   ├── routes_kpis.py        # KPI endpoints
+│   │   │   ├── routes_tokens.py      # Viewer tokens
+│   │   │   └── routes_report.py      # Report generation
 │   │   ├── core/                     # Configuration & logging
-│   │   │   ├── config.py             # Settings avec pydantic
-│   │   │   └── logging.py            # Logging structuré
-│   │   ├── models/                   # Modèles Pydantic
-│   │   │   ├── clash.py              # Modèle clash normalisé
-│   │   │   └── kpis.py               # Modèles KPIs et config
-│   │   ├── services/                 # Logique métier
+│   │   │   ├── config.py             # Pydantic settings
+│   │   │   └── logging.py            # Structured logging
+│   │   ├── models/                   # Pydantic models
+│   │   │   ├── clash.py              # Normalized clash model
+│   │   │   └── kpis.py               # KPI models and config
+│   │   ├── services/                 # Business logic
 │   │   │   ├── aps_auth.py           # OAuth 2.0 APS
-│   │   │   ├── aps_mc_client.py      # Client Model Coordination
-│   │   │   ├── clashes.py            # Service clashes
-│   │   │   ├── kpis.py               # Calculs KPIs
-│   │   │   ├── report_pdf.py         # Génération PDF
-│   │   │   ├── chart_kpis.py         # Graphiques matplotlib
-│   │   │   └── storage.py            # Gestion fichiers
-│   │   ├── mock/                     # Système mock
-│   │   │   └── generate.py           # Génération données réalistes
-│   │   ├── demo.py                   # Script démo automatique
-│   │   └── main.py                   # Application FastAPI
-│   ├── tests/                        # Tests unitaires
-│   │   ├── test_clashes.py           # Tests service clashes
-│   │   └── test_report.py            # Tests génération PDF
-│   ├── requirements.txt              # Dépendances Python
-│   ├── Makefile                      # Commandes utiles
-│   ├── pyproject.toml                # Config outils (black, ruff, mypy)
-│   └── Dockerfile                    # Image Docker backend
+│   │   │   ├── aps_mc_client.py      # Model Coordination client
+│   │   │   ├── clashes.py            # Clash service
+│   │   │   ├── kpis.py               # KPI calculations
+│   │   │   ├── report_pdf.py         # PDF generation
+│   │   │   ├── chart_kpis.py         # Matplotlib charts
+│   │   │   └── storage.py            # File storage
+│   │   ├── mock/                     # Mock system
+│   │   │   └── generate.py           # Realistic data generation
+│   │   ├── demo.py                   # Automatic demo launcher
+│   │   └── main.py                   # FastAPI application
+│   ├── tests/                        # Unit tests
+│   │   ├── test_clashes.py           # Clash service tests
+│   │   └── test_report.py            # PDF generation tests
+│   ├── requirements.txt              # Python dependencies
+│   ├── Makefile                      # Useful commands
+│   ├── pyproject.toml                # Tool config (black, ruff, mypy)
+│   └── Dockerfile                    # Backend Docker image
 │
-├── frontend/                         # Interface Streamlit
-│   ├── streamlit_app.py              # Application complète
-│   ├── requirements.txt              # Dépendances frontend
-│   └── Dockerfile                    # Image Docker frontend
+├── frontend/                         # Streamlit UI
+│   ├── streamlit_app.py              # Complete application
+│   ├── requirements.txt              # Frontend dependencies
+│   └── Dockerfile                    # Frontend Docker image
 │
-├── exports/                          # Rapports PDF générés
-├── captures/                         # Captures d'écran
+├── exports/                          # Generated PDF reports
+├── captures/                         # Screenshot storage
 │
-├── .env.sample                       # Template variables d'env
-├── .gitignore                        # Fichiers ignorés
-├── docker-compose.yml                # Orchestration Docker
-├── start.ps1                         # Quick-start Windows
-├── start.sh                          # Quick-start Linux/Mac
+├── .env.sample                       # Environment template
+├── .gitignore                        # Ignored files
+├── docker-compose.yml                # Docker orchestration
+├── start.ps1                         # Windows quick-start
+├── start.sh                          # Linux/Mac quick-start
 │
 └── Documentation/
-    ├── README.md                     # Documentation principale
-    ├── QUICKSTART.md                 # Guide démarrage rapide
-    ├── DEMO.md                       # Storyboard vidéo démo
-    ├── CONTRIBUTING.md               # Guide contribution
-    ├── CHANGELOG.md                  # Historique versions
-    └── LICENSE                       # Licence MIT
+    ├── README.md                     # Main documentation
+    ├── QUICKSTART.md                 # Quick start guide
+    ├── DEMO.md                       # Video demo storyboard
+    ├── CONTRIBUTING.md               # Contributor guide
+    ├── CHANGELOG.md                  # Version history
+    └── LICENSE                       # MIT License
 ```
 
 ---
 
-## 🎯 Fonctionnalités Livrées
+## 🎯 Delivered Features
 
 ### ✅ Backend API (FastAPI)
 
-**Authentification & Connexion:**
-- ✅ OAuth 2.0 avec Autodesk Platform Services (APS)
-- ✅ Gestion automatique des tokens avec expiration
-- ✅ Client Model Coordination API structuré
-- ✅ Fallback automatique en mode mock si pas de credentials
+**Authentication & Connection:**
+- ✅ OAuth 2.0 with Autodesk Platform Services (APS)
+- ✅ Automatic token management with expiration
+- ✅ Structured Model Coordination API client
+- ✅ Auto-fallback to mock mode when no credentials
 
-**Endpoints REST:**
+**REST Endpoints:**
 - ✅ `GET /api/health` - Health check
-- ✅ `GET /api/config` - Configuration publique
-- ✅ `GET /api/clashes` - Liste clashes avec filtres et pagination
-- ✅ `GET /api/clashes/{id}` - Détail d'un clash
-- ✅ `GET /api/kpis` - Calcul des KPIs
-- ✅ `GET /api/token/viewer` - Token pour Autodesk Viewer
-- ✅ `POST /api/capture` - Sauvegarde capture d'écran
-- ✅ `POST /api/report/pdf` - Génération rapport PDF
-- ✅ `GET /api/report/latest` - Téléchargement dernier rapport
+- ✅ `GET /api/config` - Public configuration
+- ✅ `GET /api/clashes` - Clashes list with filters and pagination
+- ✅ `GET /api/clashes/{id}` - Clash details
+- ✅ `GET /api/kpis` - KPI calculations
+- ✅ `GET /api/token/viewer` - Tokens for Autodesk Viewer
+- ✅ `POST /api/capture` - Screenshot storage
+- ✅ `POST /api/report/pdf` - PDF report generation
+- ✅ `GET /api/report/latest` - Latest report download
 
-**Filtrage & Tri:**
-- ✅ Par sévérité (high/medium/low)
-- ✅ Par statut (open/resolved/suppressed)
-- ✅ Par discipline (recherche partielle)
-- ✅ Par niveau (exact match)
-- ✅ Tri configurable (severity, status, dates)
-- ✅ Pagination (jusqu'à 200 items/page)
+**Filtering & Sorting:**
+- ✅ By severity (high/medium/low)
+- ✅ By status (open/resolved/suppressed)
+- ✅ By discipline (partial match)
+- ✅ By level (exact match)
+- ✅ Configurable sorting (severity, status, dates)
+- ✅ Pagination (up to 200 items/page)
 
-**KPIs Calculés:**
+**Calculated KPIs:**
 - ✅ Total clashes
-- ✅ Distribution par sévérité (high/medium/low)
-- ✅ Distribution par statut (open/resolved/suppressed)
-- ✅ Pourcentage résolus
-- ✅ Top 5 catégories d'éléments
-- ✅ Statistiques par paires de disciplines
-- ✅ Distribution par niveau de bâtiment
+- ✅ Distribution by severity (high/medium/low)
+- ✅ Distribution by status (open/resolved/suppressed)
+- ✅ Resolved percentage
+- ✅ Top 5 element categories
+- ✅ Statistics by discipline pairs
+- ✅ Distribution by building level
 
-**Génération PDF:**
-- ✅ Page de couverture personnalisable
-- ✅ Graphiques (bar, pie, horizontal bar) via matplotlib
-- ✅ Tableaux détaillés groupés par sévérité
-- ✅ Intégration captures d'écran
-- ✅ Liens directs vers ACC
-- ✅ Pagination et numérotation automatiques
-- ✅ Style professionnel avec ReportLab
+**PDF Generation:**
+- ✅ Customizable cover page
+- ✅ Charts (bar, pie, horizontal bar) via matplotlib
+- ✅ Detailed tables grouped by severity
+- ✅ Screenshot integration
+- ✅ Direct ACC links
+- ✅ Automatic pagination and numbering
+- ✅ Professional styling with ReportLab
 
 ### ✅ Frontend (Streamlit)
 
 **Dashboard:**
-- ✅ 4 KPI cards avec gradients modernes
-- ✅ Graphiques interactifs (Plotly)
-- ✅ Badge mode (Mock/Live)
-- ✅ Design responsive avec CSS custom
+- ✅ 4 KPI cards with modern gradients
+- ✅ Interactive graphs (Plotly)
+- ✅ Mode badge (Mock/Live)
+- ✅ Responsive CSS custom design
 
-**Table des Clashes:**
-- ✅ Affichage paginé
-- ✅ Colonnes: ID, Titre, Sévérité, Statut, Disciplines, Niveau, Éléments
-- ✅ Code couleur pour sévérité
-- ✅ Tri et filtrage dynamique
+**Clashes Table:**
+- ✅ Paginated display
+- ✅ Columns: ID, Title, Severity, Status, Disciplines, Level, Elements
+- ✅ Color coding for severity
+- ✅ Dynamic sorting and filtering
 
-**Filtres (Sidebar):**
-- ✅ Multi-select sévérité
-- ✅ Multi-select statut
-- ✅ Recherche discipline
-- ✅ Filtre niveau
-- ✅ Application instantanée
+**Sidebar Filters:**
+- ✅ Multi-select severity
+- ✅ Multi-select status
+- ✅ Discipline search
+- ✅ Level filter
+- ✅ Instant application
 
 **Export:**
-- ✅ Génération PDF avec configuration
-- ✅ Export CSV des données
-- ✅ Téléchargement direct depuis UI
+- ✅ PDF generation with configuration
+- ✅ CSV data export
+- ✅ Direct download from UI
 
-**Viewer 3D:**
-- ✅ Placeholder pour Autodesk Viewer
-- ✅ Instructions d'intégration
-- ✅ Support token APS
+**3D Viewer:**
+- ✅ Autodesk Viewer placeholder
+- ✅ Integration instructions
+- ✅ APS token support
 
-### ✅ Mode Mock (Sans Credentials)
+### ✅ Mock Mode (Without Credentials)
 
-**Données Générées:**
-- ✅ 100 clashes avec distribution réaliste
+**Generated Data:**
+- ✅ 100 clashes with realistic distribution
 - ✅ 6 disciplines (MEP, Structure, Architecture, Plumbing, Electrical, HVAC)
-- ✅ 7 niveaux (L00 → Roof)
-- ✅ Répartition sévérité: 20% high, 50% medium, 30% low
-- ✅ Répartition statut: 60% open, 30% resolved, 10% suppressed
-- ✅ Catégories BIM réalistes
-- ✅ URN de démonstration Autodesk
+- ✅ 7 levels (L00 → Roof)
+- ✅ Severity distribution: 20% high, 50% medium, 30% low
+- ✅ Status distribution: 60% open, 30% resolved, 10% suppressed
+- ✅ Realistic BIM categories
+- ✅ Demonstration URN for viewer
 
-**Comportement:**
-- ✅ Auto-activation si pas de credentials
-- ✅ Toutes fonctionnalités disponibles
-- ✅ API identique (mode live/mock transparent)
-- ✅ Cache en mémoire pour performance
+**Behavior:**
+- ✅ Auto-activation when no credentials
+- ✅ All features available
+- ✅ Identical API (mock/live mode transparent)
+- ✅ In-memory caching for performance
 
-### ✅ Tests & Qualité
+### ✅ Tests & Quality
 
-**Tests Unitaires:**
-- ✅ Tests service clashes (filtrage, pagination)
-- ✅ Tests calcul KPIs (agrégations)
-- ✅ Tests génération PDF (structure, taille)
-- ✅ Support async (pytest-asyncio)
-- ✅ Couverture >70%
+**Unit Tests:**
+- ✅ Clash service tests (filtering, pagination)
+- ✅ KPI calculation tests (aggregations)
+- ✅ PDF generation tests (structure, size)
+- ✅ Async support (pytest-asyncio)
+- ✅ >70% coverage
 
-**Outils Qualité:**
-- ✅ Black - Formatage automatique
-- ✅ Ruff - Linting Python
+**Quality Tools:**
+- ✅ Black - Automatic formatting
+- ✅ Ruff - Linting
 - ✅ Mypy - Type checking
 - ✅ Make targets (format, lint, test)
 
-### ✅ Déploiement & DevOps
+### ✅ Deployment & DevOps
 
 **Docker:**
 - ✅ Dockerfile backend (Python 3.11-slim)
 - ✅ Dockerfile frontend (Streamlit)
-- ✅ docker-compose.yml complet
-- ✅ Health checks configurés
+- ✅ docker-compose.yml complete
+- ✅ Health checks configured
 
-**Scripts de Démarrage:**
-- ✅ `start.ps1` - Quick-start Windows (PowerShell)
-- ✅ `start.sh` - Quick-start Linux/Mac (Bash)
-- ✅ `python -m app.demo` - Lanceur démo automatique
-- ✅ Makefile avec commandes utiles
+**Quick Start Scripts:**
+- ✅ `start.ps1` - Windows quick-start (PowerShell)
+- ✅ `start.sh` - Linux/Mac quick-start (Bash)
+- ✅ `python -m app.demo` - Automatic demo launcher
+- ✅ Makefile with useful commands
 
 **Configuration:**
-- ✅ `.env.sample` avec toutes les variables
-- ✅ Validation via pydantic-settings
-- ✅ CORS configurable
-- ✅ Logging structuré
+- ✅ `.env.sample` with all variables
+- ✅ Pydantic validation
+- ✅ Configurable CORS
+- ✅ Structured logging
 
 ### ✅ Documentation
 
 **Guides:**
-- ✅ README.md complet (installation, usage, API)
-- ✅ QUICKSTART.md (démarrage en 5 minutes)
-- ✅ DEMO.md (storyboard vidéo détaillé)
-- ✅ CONTRIBUTING.md (guide contributeurs)
-- ✅ CHANGELOG.md (historique versions)
+- ✅ README.md complete (installation, usage, API)
+- ✅ QUICKSTART.md (5-minute start guide)
+- ✅ DEMO.md (detailed video storyboard)
+- ✅ CONTRIBUTING.md (contributor guide)
+- ✅ CHANGELOG.md (version history)
 
 **API:**
-- ✅ Documentation Swagger (`/docs`)
-- ✅ Documentation ReDoc (`/redoc`)
-- ✅ Docstrings Python complètes
-- ✅ Type hints partout
+- ✅ Swagger documentation (`/docs`)
+- ✅ ReDoc documentation (`/redoc`)
+- ✅ Complete Python docstrings
+- ✅ Type hints everywhere
 
 ---
 
-## 🚀 Comment Démarrer
+## 🚀 How to Get Started
 
-### Méthode 1: Script Automatique (Recommandé)
+### Method 1: Automatic Script (Recommended)
 
 **Windows:**
 ```powershell
@@ -230,14 +230,14 @@ chmod +x start.sh
 ./start.sh
 ```
 
-### Méthode 2: Python Demo
+### Method 2: Python Demo
 
 ```bash
 cd backend
 python -m app.demo --mock
 ```
 
-### Méthode 3: Manuel
+### Method 3: Manual
 
 **Terminal 1 - Backend:**
 ```bash
@@ -253,27 +253,27 @@ pip install -r requirements.txt
 streamlit run streamlit_app.py
 ```
 
-**Accès:**
+**Access:**
 - Frontend: http://localhost:8501
 - API: http://localhost:8000
 - Docs: http://localhost:8000/docs
 
 ---
 
-## ⚙️ Configuration APS (Mode Live)
+## ⚙️ APS Configuration (Live Mode)
 
-Pour activer le mode live avec vraies données ACC:
+To enable live mode with real ACC data:
 
-1. **Créer une app APS:**
+1. **Create an APS app:**
    - https://aps.autodesk.com/
-   - Noter Client ID et Client Secret
+   - Note Client ID and Client Secret
 
-2. **Copier `.env.sample` vers `.env`:**
+2. **Copy `.env.sample` to `.env`:**
    ```bash
    cp .env.sample .env
    ```
 
-3. **Remplir les credentials:**
+3. **Fill credentials:**
    ```ini
    APS_CLIENT_ID=your_client_id
    APS_CLIENT_SECRET=your_client_secret
@@ -284,128 +284,128 @@ Pour activer le mode live avec vraies données ACC:
    USE_MOCK=false
    ```
 
-4. **Redémarrer l'application**
+4. **Restart the application**
 
 ---
 
-## 🎯 Critères d'Acceptation - Statut
+## 🎯 Acceptance Criteria - Status
 
-| Critère | Statut | Notes |
-|---------|--------|-------|
-| Lancement < 5 min en mode mock | ✅ | Scripts automatiques fournis |
-| Export PDF fonctionnel | ✅ | Avec graphiques et captures |
-| Focus caméra sur clash | ⚠️ | Placeholder fourni, nécessite JS custom |
-| Code commenté et typé | ✅ | Docstrings + type hints partout |
-| Aucun secret committé | ✅ | `.gitignore` + `.env.sample` |
-| README clair | ✅ | Documentation complète |
-| Tests unitaires | ✅ | Coverage >70% |
-| Mode mock complet | ✅ | 100 clashes réalistes |
+| Criteria | Status | Notes |
+|----------|--------|-------|
+| Startup < 5 minutes in mock mode | ✅ | Provided automatic scripts |
+| Functional PDF export | ✅ | With charts and screenshots |
+| Camera focus on clash | ⚠️ | Provided placeholder, requires JS custom |
+| Commented and typed code | ✅ | Docstrings + type hints everywhere |
+| No committed secrets | ✅ | `.gitignore` + `.env.sample` |
+| Clear README | ✅ | Complete documentation |
+| Unit tests | ✅ | >70% coverage |
+| Mock mode complete | ✅ | 100 realistic clashes |
 
 ---
 
-## 📊 Statistiques du Projet
+## 📊 Project Statistics
 
 **Code:**
-- **Backend:** ~2,500 lignes Python
-- **Frontend:** ~450 lignes Python (Streamlit)
-- **Tests:** ~200 lignes
-- **Total:** ~3,150 lignes de code
+- **Backend:** ~2,500 Python lines
+- **Frontend:** ~450 Python lines (Streamlit)
+- **Tests:** ~200 lines
+- **Total:** ~3,150 lines of code
 
-**Fichiers:**
-- **Python:** 25 fichiers
-- **Config:** 8 fichiers
-- **Documentation:** 6 fichiers
-- **Total:** 39 fichiers
+**Files:**
+- **Python:** 25 files
+- **Config:** 8 files
+- **Documentation:** 6 files
+- **Total:** 39 files
 
-**Dépendances:**
-- **Backend:** 15 packages principaux
-- **Frontend:** 6 packages principaux
+**Dependencies:**
+- **Backend:** 15 main packages
+- **Frontend:** 6 main packages
 
 ---
 
-## 🔧 Commandes Utiles
+## 🔧 Useful Commands
 
 ```bash
 # Tests
 cd backend
-make test              # Lancer tous les tests
-make test-cov          # Avec couverture
+make test              # Run all tests
+make test-cov          # With coverage
 pytest tests/ -v       # Verbose
 
-# Qualité code
-make format            # Formatter avec black
-make lint              # Linter avec ruff
+# Quality code
+make format            # Format with black
+make lint              # Lint with ruff
 mypy app/              # Type checking
 
-# Développement
+# Development
 make dev               # Install dev dependencies
-make run               # Lancer backend
-make run-mock          # Force mode mock
+make run               # Run backend
+make run-mock          # Force mock mode
 
 # Docker
-docker-compose up      # Lancer avec Docker
-docker-compose down    # Arrêter
+docker-compose up      # Run with Docker
+docker-compose down    # Stop
 ```
 
 ---
 
-## 🎬 Prochaines Étapes Suggérées
+## 🎬 Next Suggested Steps
 
-### Court Terme
-1. **Tester en mode mock:**
-   - Lancer avec `.\start.ps1`
-   - Explorer l'UI
-   - Générer un rapport PDF
-   - Vérifier le CSV export
+### Short Term
+1. **Test in mock mode:**
+   - Run with `.\start.ps1`
+   - Explore UI
+   - Generate a PDF report
+   - Check CSV export
 
-2. **Configurer APS (optionnel):**
-   - Créer app APS
-   - Configurer `.env`
-   - Tester en mode live
+2. **Configure APS (optional):**
+   - Create APS app
+   - Configure `.env`
+   - Test in live mode
 
-3. **Créer vidéo démo:**
-   - Suivre `DEMO.md`
-   - Enregistrer écran
-   - Publier sur YouTube/LinkedIn
+3. **Create demo video:**
+   - Follow `DEMO.md`
+   - Record screen
+   - Publish on YouTube/LinkedIn
 
-### Moyen Terme
-1. **Intégration Viewer:**
-   - Implémenter focus/isolate JavaScript
+### Medium Term
+1. **Viewer Integration:**
+   - Implement focus/isolate JavaScript
    - Capture canvas viewer
-   - Liens profonds ACC
+   - Deep ACC links
 
-2. **Améliorations:**
-   - Export Excel enrichi
-   - Filtres par date
-   - Tags personnalisés
+2. **Improvements:**
+   - Rich Excel export
+   - Date-based filters
+   - Custom tags
 
-3. **Base de données:**
-   - PostgreSQL pour historique
-   - Redis pour cache
-   - Comparaison versions
+3. **Database:**
+   - PostgreSQL for history
+   - Redis for cache
+   - Version comparisons
 
-### Long Terme
-1. **Authentification utilisateurs**
-2. **Workflow d'approbation**
-3. **ML pour priorisation**
-4. **Application mobile**
-5. **Multi-projets dashboard**
+### Long Term
+1. **User authentication**
+2. **Approval workflow**
+3. **ML for prioritization**
+4. **Mobile app**
+5. **Multi-project dashboard**
 
 ---
 
-## 📋 Checklist de Livraison
+## 📋 Delivery Checklist
 
-- [x] Backend API fonctionnel
-- [x] Frontend UI responsive
-- [x] Mode mock opérationnel
-- [x] Génération PDF complète
-- [x] Tests unitaires passants
-- [x] Documentation exhaustive
-- [x] Scripts de démarrage (Windows/Linux)
+- [x] Functional backend API
+- [x] Responsive frontend UI
+- [x] Operational mock mode
+- [x] Complete PDF generation
+- [x] Passing unit tests
+- [x] Exhaustive documentation
+- [x] Quick start scripts (Windows/Linux)
 - [x] Docker configuration
-- [x] `.gitignore` configuré
-- [x] `.env.sample` fourni
-- [x] README détaillé
+- [x] Configured `.gitignore`
+- [x] Provided `.env.sample`
+- [x] Detailed README
 - [x] QUICKSTART guide
 - [x] DEMO storyboard
 - [x] CONTRIBUTING guide
@@ -416,29 +416,29 @@ docker-compose down    # Arrêter
 
 ## 🎉 Conclusion
 
-Le projet **Smart Clash Reporter** est **100% fonctionnel** et prêt à être utilisé.
+The **Smart Clash Reporter** project is **100% functional** and ready for use.
 
-**Points forts:**
-- ✅ Démo immédiate sans configuration (mode mock)
-- ✅ Architecture propre et maintenable
-- ✅ Documentation exhaustive
-- ✅ Tests unitaires
-- ✅ Prêt pour production (Docker)
-- ✅ Code typé et formaté
-- ✅ Extensible facilement
+**Strengths:**
+- ✅ Mock mode for immediate demo (no configuration)
+- ✅ Clean and maintainable architecture
+- ✅ Exhaustive documentation
+- ✅ Unit tests
+- ✅ Production-ready (Docker)
+- ✅ Typed and formatted code
+- ✅ Easily extensible
 
-**Pour commencer:**
+**To get started:**
 ```powershell
 .\start.ps1
 ```
 
 **Support:**
-- Consulter README.md pour détails
-- Voir QUICKSTART.md pour résolution problèmes
-- Ouvrir une issue GitHub si besoin
+- See README.md for details
+- Check QUICKSTART.md for troubleshooting
+- Open GitHub issue if needed
 
 ---
 
-**Développé avec ❤️ pour la communauté BIM**
+**Developed with ❤️ for the BIM community**
 
-*Version 1.0.0 - Octobre 2025*
+*Version 1.0.0 - October 2025*

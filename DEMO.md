@@ -1,285 +1,285 @@
-# 🎬 Smart Clash Reporter - Storyboard Démo
+# 🎬 Smart Clash Reporter - Demo Storyboard
 
-## 🎯 Objectif de la démo
+## 🎯 Demo Objective
 
-Présenter Smart Clash Reporter comme un outil **clé-en-main** pour automatiser la coordination BIM et la génération de rapports de clashes depuis Autodesk ACC.
+Present Smart Clash Reporter as a **turnkey tool** for automating BIM coordination and clash report generation from Autodesk ACC.
 
-**Durée cible:** 60-90 secondes  
-**Format:** Capture d'écran + voix-off ou texte overlay
-
----
-
-## 📝 Script détaillé
-
-### 🎬 Scène 1: Hook (0-5s)
-
-**Visuel:**
-- Écran noir → Fade in sur titre
-- Animation de logo/titre
-
-**Texte overlay:**
-```
-"Automatiser la coordination BIM
-avec Autodesk ACC + Smart Clash Reporter"
-```
-
-**Voix-off (optionnel):**
-> "Vous passez des heures à générer des rapports de clashes manuellement?"
+**Target Duration:** 60-90 seconds
+**Format:** Screen recording + voice-over or text overlay
 
 ---
 
-### 🎬 Scène 2: Dashboard KPIs (5-15s)
+## 📝 Detailed Script
 
-**Visuel:**
-- Ouverture de l'application (http://localhost:8501)
-- Affichage du header avec badge "Mode Mock"
-- Zoom sur les 4 KPI cards qui s'affichent progressivement:
+### 🎬 Scene 1: Hook (0-5s)
+
+**Visual:**
+- Black screen → Fade in on title
+- Title/logo animation
+
+**Text Overlay:**
+```
+"Automating BIM coordination
+with Autodesk ACC + Smart Clash Reporter"
+```
+
+**Voice-over (optional):**
+> "Do you spend hours generating clash reports manually?"
+
+---
+
+### 🎬 Scene 2: KPIs Dashboard (5-15s)
+
+**Visual:**
+- Open the application (http://localhost:8501)
+- Display header with "Mode Mock" badge
+- 4 KPI cards appear progressively:
   - Total Clashes: **100**
-  - Haute Sévérité: **20**
-  - Ouverts: **60**
-  - % Résolus: **30%**
+  - High Severity: **20**
+  - Open: **60**
+  - % Resolved: **30%**
 
 **Actions:**
-- Les cartes apparaissent avec une animation slide-in
-- Survol rapide des graphiques (bars + pie chart)
+- Cards appear with slide-in animation
+- Briefly hover over graphs (bar + pie chart)
 
-**Texte overlay:**
+**Text Overlay:**
 ```
-"Visualisez instantanément vos métriques clés"
+"View key metrics instantly"
 ```
 
-**Voix-off (optionnel):**
-> "Smart Clash Reporter récupère automatiquement vos clashes depuis ACC et affiche les métriques essentielles."
+**Voice-over (optional):**
+> "Smart Clash Reporter automatically fetches clashes from ACC and displays essential metrics."
 
 ---
 
-### 🎬 Scène 3: Table des clashes (15-30s)
+### 🎬 Scene 3: Clashes Table (15-30s)
 
-**Visuel:**
-- Scroll dans la table des clashes
-- Highlight des colonnes importantes:
-  - ID, Titre, Sévérité (couleurs: rouge/orange/vert)
+**Visual:**
+- Scroll through the clashes table
+- Highlight important columns:
+  - ID, Title, Severity (color coded: red/orange/green)
   - Disciplines
-  - Niveau
+  - Level
 
 **Actions:**
-1. Appliquer un filtre "Haute sévérité" dans la sidebar
-2. La table se met à jour instantanément (100 → 20 clashes)
-3. Survol d'une ligne de clash
+1. Apply "High severity" filter from sidebar
+2. Table updates instantly (100 → 20 clashes)
+3. Hover over a clash row
 
-**Texte overlay:**
+**Text Overlay:**
 ```
-"Filtrez par sévérité, statut, discipline ou niveau"
+"Filter by severity, status, discipline or level"
 ```
 
-**Voix-off (optionnel):**
-> "Filtrez rapidement pour vous concentrer sur les clashes critiques."
+**Voice-over (optional):**
+> "Filter quickly to focus on critical clashes."
 
 ---
 
-### 🎬 Scène 4: Clic sur un clash → Focus 3D (30-45s)
+### 🎬 Scene 4: Click on Clash → 3D Focus (30-45s)
 
-**Visuel:**
-- Section "Visualisation 3D" en dessous de la table
-- Placeholder du viewer avec texte explicatif
-- (En production: montrer le viewer Autodesk chargé)
+**Visual:**
+- "3D Visualization" section below the table
+- Placeholder for Autodesk Viewer with explanatory text
+- (In production: show loaded Autodesk Viewer)
 
 **Actions:**
-1. Sélectionner un clash dans la table (surbrillance)
-2. Montrer boutons d'action:
+1. Select a clash in the table (highlight)
+2. Show action buttons:
    - 🎯 Focus
    - 👁️ Isolate
    - 📸 Capture
 
 **Note:**
-En mode mock, afficher un message:
+In mock mode, display:
 ```
-"Autodesk Viewer s'affichera ici avec un token APS valide
-→ Zoom automatique sur le clash sélectionné"
-```
-
-**Texte overlay:**
-```
-"Localisez les clashes en 3D d'un simple clic"
+"Autodesk Viewer will appear here with an APS token
+→ Auto-zoom on the selected clash"
 ```
 
-**Voix-off (optionnel):**
-> "Chaque clash peut être visualisé en 3D avec zoom automatique sur la zone de conflit."
+**Text Overlay:**
+```
+"Locate clashes in 3D with one click"
+```
+
+**Voice-over (optional):**
+> "Each clash can be visualized in 3D with auto-zoom on the conflict area."
 
 ---
 
-### 🎬 Scène 5: Export PDF (45-65s)
+### 🎬 Scene 5: PDF Export (45-65s)
 
-**Visuel:**
-- Retour à la sidebar
-- Section "Export PDF"
+**Visual:**
+- Back to sidebar
+- "Export PDF" section
 
 **Actions:**
-1. Remplir les champs:
-   - Titre: "Rapport de Clashes - Projet Demo"
-   - Préparé par: "Équipe BIM"
-2. **Cliquer sur le bouton principal "🚀 Générer PDF"**
-3. Spinner de chargement (2-3s)
-4. ✅ Message "Rapport généré avec succès!"
-5. Bouton "⬇️ Télécharger PDF" apparaît
+1. Fill fields:
+   - Title: "Demo Project Clash Report"
+   - Prepared by: "BIM Team"
+2. **Click main button "🚀 Generate PDF"**
+3. Loading spinner (2-3s)
+4. ✅ Success message "Report generated successfully!"
+5. "⬇️ Download PDF" button appears
 
-**Texte overlay:**
+**Text Overlay:**
 ```
-"Générez un rapport PDF complet en un clic"
+"Generate complete PDF reports in one click"
 ```
 
-**Voix-off (optionnel):**
-> "Générez instantanément un rapport PDF professionnel avec tous les détails."
+**Voice-over (optional):**
+> "Generate instant professional PDF reports with all details."
 
 ---
 
-### 🎬 Scène 6: Aperçu du PDF (65-85s)
+### 🎬 Scene 6: PDF Preview (65-85s)
 
-**Visuel:**
-- Ouverture rapide du PDF généré
-- Scroll à travers les sections:
-  1. **Page de garde** (titre, date, logo)
-  2. **Section KPIs** avec graphiques (bars, pie charts)
-  3. **Tableaux de clashes** groupés par sévérité
-  4. **Captures d'écran** (si disponibles)
-  5. **Liens ACC** pour chaque clash
+**Visual:**
+- Quick PDF opening
+- Scroll through sections:
+  1. **Cover Page** (title, date, logo)
+  2. **KPIs Section** with charts (bars, pie charts)
+  3. **Clashes Tables** grouped by severity
+  4. **Screenshots** (if available)
+  5. **ACC Links** for each clash
 
 **Actions:**
-- Scroll smooth à travers 3-4 pages
-- Zoom sur un graphique
-- Zoom sur un tableau de clashes avec détails
+- Smooth scroll through 3-4 pages
+- Zoom on a chart
+- Zoom on a detailed clashes table
 
-**Texte overlay:**
+**Text Overlay:**
 ```
-"Rapport complet: KPIs, graphiques, détails, liens ACC"
+"Complete report: KPIs, charts, details, ACC links"
 ```
 
-**Voix-off (optionnel):**
-> "Le rapport inclut toutes les métriques, graphiques, tableaux détaillés et liens directs vers ACC."
+**Voice-over (optional):**
+> "The report includes all metrics, charts, detailed tables and direct ACC links."
 
 ---
 
-### 🎬 Scène 7: Outro (85-90s)
+### 🎬 Scene 7: Outro (85-90s)
 
-**Visuel:**
-- Retour à l'écran titre ou logo
-- Affichage des informations finales
+**Visual:**
+- Back to title screen or logo
+- Display final information
 
-**Texte overlay:**
+**Text Overlay:**
 ```
-✅ Mode mock: démo immédiate sans credentials
-✅ Mode live: connexion directe à votre ACC
-✅ Open-source & personnalisable
+✅ Mock mode: immediate demo without credentials
+✅ Live mode: direct ACC connection
+✅ Open-source & customizable
 
 Smart Clash Reporter
-github.com/[votre-repo]
+github.com/[your-repo]
 
-Intéressé par la version PRO ?
-→ Contactez-nous
+Interested in PRO version?
+→ Contact us
 ```
 
-**Voix-off (optionnel):**
-> "Smart Clash Reporter: votre solution clé-en-main pour automatiser la coordination BIM. Disponible en open-source. Contactez-nous pour la version entreprise."
+**Voice-over (optional):**
+> "Smart Clash Reporter: your turnkey solution for automating BIM coordination. Available as open-source. Contact us for the enterprise version."
 
 ---
 
-## 🎨 Notes de production
+## 🎨 Production Notes
 
-### Style visuel
-- **Palette de couleurs:** Bleu professionnel (#1e40af) + accents gradient
-- **Transitions:** Smooth fades et slides
-- **Tempo:** Dynamique mais pas précipité
-- **Musique:** Background instrumental léger (optionnel)
+### Visual Style
+- **Color Palette:** Professional blue (#1e40af) + gradient accents
+- **Transitions:** Smooth fades and slides
+- **Pacing:** Dynamic but not rushed
+- **Music:** Light background instrumental (optional)
 
-### Texte overlay
-- **Police:** Sans-serif moderne (Inter, Roboto)
-- **Taille:** Grande et lisible
-- **Contraste:** Fond sombre + texte blanc OU fond clair + texte foncé
+### Text Overlay
+- **Font:** Modern sans-serif (Inter, Roboto)
+- **Size:** Large and readable
+- **Contrast:** Dark background + white text OR light background + dark text
 - **Animation:** Fade in + slide up
 
-### Captures d'écran
-- **Résolution:** 1920x1080 minimum
-- **Format:** MP4 ou GIF haute qualité
-- **Compression:** Optimisée pour web (< 10 MB)
+### Screen Recordings
+- **Resolution:** 1920x1080 minimum
+- **Format:** MP4 or high-quality GIF
+- **Compression:** Web-optimized (< 10 MB)
 
-### Points d'attention
-1. **Montrer la valeur immédiate:** Gain de temps évident
-2. **Simplicité:** Interface intuitive, workflow clair
-3. **Résultat concret:** Le PDF final est le "wow moment"
-4. **Pas de jargon technique:** Accessible aux non-devs
+### Points to Attention
+1. **Show immediate value:** Obvious time savings
+2. **Simplicity:** Intuitive interface, clear workflow
+3. **Concrete Result:** The final PDF is the "wow moment"
+4. **No jargon:** Accessible to non-developers
 
 ---
 
-## 🎯 Variantes de démo
+## 🎯 Demo Variants
 
-### Démo courte (30s) - Teaser
+### Short Demo (30s) - Teaser
 1. Hook (5s)
-2. Dashboard KPIs (10s)
-3. Clic Export PDF → Aperçu (10s)
+2. KPIs Dashboard (10s)
+3. Click Export PDF → Preview (10s)
 4. Outro (5s)
 
-### Démo technique (3-5min) - Deep dive
-Inclure:
-- Explication du mode mock vs live
-- Démonstration des filtres avancés
+### Technical Demo (3-5min) - Deep Dive
+Include:
+- Mock mode vs live mode explanation
+- Advanced filter demonstration
 - API endpoints (Swagger)
-- Code walkthrough (optionnel)
-- Configuration APS
+- Code walkthrough (optional)
+- APS configuration
 
-### Démo live - Présentation client
-- Utiliser des données réelles du projet client
-- Personnaliser le rapport (logo, titre)
-- Montrer l'intégration ACC réelle
-- Q&A en direct
-
----
-
-## 📋 Checklist avant enregistrement
-
-- [ ] Backend lancé et fonctionnel (mode mock)
-- [ ] Frontend Streamlit chargé et responsive
-- [ ] Mock data générées (100 clashes)
-- [ ] Graphiques s'affichent correctement
-- [ ] PDF peut être généré (test)
-- [ ] Résolution d'écran optimale (1920x1080)
-- [ ] Navigateur en mode plein écran (F11)
-- [ ] Pas de notifications/pop-ups distrayants
-- [ ] Transitions fluides (60 fps)
+### Live Demo - Client Presentation
+- Use real project data from client
+- Customize report (logo, title)
+- Show real ACC integration
+- Live Q&A
 
 ---
 
-## 🚀 Post-production
+## 📋 Pre-Recording Checklist
 
-### Édition
-1. Trim des temps morts
-2. Ajout de transitions
-3. Texte overlay animé
-4. Color grading (optionnel)
-5. Musique de fond (royalty-free)
+- [ ] Backend running and functional (mock mode)
+- [ ] Streamlit frontend loaded and responsive
+- [ ] Mock data generated (100 clashes)
+- [ ] Charts display correctly
+- [ ] PDF can be generated (test)
+- [ ] Optimal screen resolution (1920x1080)
+- [ ] Browser in full-screen mode (F11)
+- [ ] No distracting notifications/pop-ups
+- [ ] Smooth transitions (60 fps)
+
+---
+
+## 🚀 Post-Production
+
+### Editing
+1. Trim dead time
+2. Add transitions
+3. Animate text overlay
+4. Color grade (optional)
+5. Add background music (royalty-free)
 
 ### Export
 - **Format:** MP4 (H.264)
-- **Résolution:** 1080p
-- **Framerate:** 30 ou 60 fps
+- **Resolution:** 1080p
+- **Frame Rate:** 30 or 60 fps
 - **Bitrate:** 8-10 Mbps
 
 ### Distribution
-- **YouTube:** Titre SEO-friendly, description détaillée
-- **LinkedIn:** Version courte (30-60s)
-- **Site web:** Embed sur page d'accueil
-- **GitHub:** Ajout au README
+- **YouTube:** SEO-friendly title, detailed description
+- **LinkedIn:** Short version (30-60s) for social media
+- **Website:** Embed on homepage
+- **GitHub:** Add to README
 
 ---
 
-## 💡 Tips pour une démo réussie
+## 💡 Successful Demo Tips
 
-1. **Rythme soutenu:** Pas de temps morts
-2. **Focus sur le ROI:** Gain de temps, réduction d'erreurs
-3. **Avant/Après:** Montrer la différence (optionnel)
-4. **Call-to-Action clair:** Lien GitHub, contact, démo live
-5. **Sous-titres:** Important pour accessibilité
-6. **Mobile-friendly:** Version verticale pour réseaux sociaux
+1. **Sustained Pace:** No dead time
+2. **Focus on ROI:** Time savings, error reduction
+3. **Before/After:** Show difference (optional)
+4. **Clear Call-to-Action:** GitHub link, contact, live demo
+5. **Subtitles:** Important for accessibility
+6. **Mobile-Friendly:** Vertical version for social media
 
 ---
 
-**Bon courage pour la démo! 🎬🚀**
+**Good luck with the demo! 🎬🚀**

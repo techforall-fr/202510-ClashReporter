@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 # Create FastAPI app
 app = FastAPI(
     title="Smart Clash Reporter API",
-    description="API pour la coordination de modèles BIM et génération de rapports de clashes",
+    description="API for BIM model coordination and clash report generation",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"

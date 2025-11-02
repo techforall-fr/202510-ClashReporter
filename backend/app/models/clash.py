@@ -50,6 +50,7 @@ class Clash(BaseModel):
     location: Location
     screenshot_url: Optional[str] = None
     acc_link: Optional[str] = None
+    assigned_to: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
     

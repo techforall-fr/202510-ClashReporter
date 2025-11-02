@@ -1,5 +1,6 @@
 """Streamlit frontend for Smart Clash Reporter."""
 import base64
+import json
 import os
 from io import BytesIO
 
@@ -16,13 +17,90 @@ load_dotenv()
 # Configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
-# Page config
+# Internationalization
+def load_locale(language="en"):
+    locale_file = f"{language}.json"
+    try:
+        with open(locale_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        st.error(f"Locale file {locale_file} not found")
+        return {}
+
+def detect_language():
+    """Detect user language from browser."""
+    # Simple detection: check if 'fr' in the browser language
+    import streamlit.components.v1 as components
+    # Use a small component to get browser language
+    language_detector = """
+    <script>
+        const lang = navigator.language || navigator.userLanguage;
+        window.parent.postMessage({'type': 'LANGUAGE_DETECTED', 'language': lang}, '*');
+    </script>
+    """
+    components.html(language_detector, height=0)
+
+    # For demonstration, assume English, but in real app, would need session state
+    # For simplicity, let's default to 'en' and allow override
+    return "en"
+
+# Detect user language (fr or en)
+def get_user_language():
+    """Get user language from browser if possible, fallback to environment."""
+    query_params = st.experimental_get_query_params()
+    lang = query_params.get("lang", [None])[0]
+
+    if lang and lang in ["fr", "en"]:
+        return lang
+
+    # Check environment for server language
+    env_lang = os.environ.get("LANG", "").lower()
+    if "fr" in env_lang:
+        return "fr"
+
+    # Default to English
+    return "en"
+
+# Initialize language in session state
+if "language" not in st.session_state:
+    # For automatic detection, we'll use a placeholder
+    st.session_state.language = "en"  # Default, will be overridden by detection
+
+user_language = st.session_state.language
+LOCALE = load_locale(user_language)
+
+def tr(key_path):
+    keys = key_path.split('.')
+    value = LOCALE
+    for key in keys:
+        if isinstance(value, dict) and key in value:
+            value = value[key]
+        else:
+            return key_path  # fallback
+    return value
+
+# Page config with JavaScript for language detection
 st.set_page_config(
     page_title="Smart Clash Reporter",
     page_icon="🏗️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Language detection JavaScript
+st.markdown("""
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.has('lang')) {
+        const browserLang = navigator.language || navigator.userLanguage;
+        const isFrench = browserLang.toLowerCase().startsWith('fr');
+        const lang = isFrench ? 'fr' : 'en';
+        const newUrl = window.location.pathname + '?lang=' + lang + window.location.hash;
+        window.history.replaceState({}, '', newUrl);
+        window.location.reload();
+    }
+</script>
+""", unsafe_allow_html=True)
 
 # Custom CSS
 st.markdown("""
@@ -83,7 +161,7 @@ def fetch_config():
         response.raise_for_status()
         return response.json()
     except Exception as e:
-        st.error(f"Impossible de se connecter au backend: {e}")
+        st.error(tr("errors.backend_connection").format(error=str(e)))
         return None
 
 
@@ -327,18 +405,35 @@ def display_clash_table(clashes_data):
     return df
 
 
-def display_viewer(selected_clash_id=None):
+def display_viewer(config=None, selected_clash_id=None):
     """Display Autodesk Viewer section with 3D models."""
     st.markdown("### 🎨 Visualisation 3D")
-    
+
     st.info("""
     **Viewer Autodesk Forge** - Visualisez vos modèles BIM en 3D
-    
+
     - 🔍 Les modèles se chargent automatiquement
     - 🎯 Cliquez sur un clash dans le tableau puis sur "📍 Zoomer sur ce clash" pour le localiser
     - 🎨 Les éléments en conflit sont colorés (rouge et bleu)
     """)
-    
+
+    has_credentials = bool(config and config.get("has_aps_credentials"))
+    is_mock_mode = bool(config and config.get("is_mock_mode"))
+
+    if not has_credentials:
+        st.warning(
+            "Le viewer Autodesk nécessite des identifiants APS valides. "
+            "Ajoutez vos secrets APS dans le backend (.env) puis redémarrez pour activer la visualisation 3D."
+        )
+        return
+
+    if is_mock_mode:
+        st.info(
+            "Le viewer n'est pas disponible en mode mock. "
+            "Basculez en mode live avec des identifiants APS valides pour activer la visualisation 3D."
+        )
+        return
+
     # Load viewer HTML
     viewer_html_path = "viewer_component.html"
     try:
@@ -499,7 +594,7 @@ def main():
     st.markdown("---")
     
     # Viewer section
-    display_viewer()
+    display_viewer(config=config)
     
     # Footer
     st.markdown("---")
