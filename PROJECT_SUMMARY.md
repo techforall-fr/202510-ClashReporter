@@ -30,9 +30,11 @@ smart-clash-reporter/
 │   │   │   ├── kpis.py               # KPI calculations
 │   │   │   ├── report_pdf.py         # PDF generation
 │   │   │   ├── chart_kpis.py         # Matplotlib charts
+│   │   │   ├── problems.py           # APS Problems integration
 │   │   │   └── storage.py            # File storage
 │   │   ├── mock/                     # Mock system
-│   │   │   └── generate.py           # Realistic data generation
+│   │   │   ├── generate.py           # Realistic data generation
+│   │   │   └── problems.py           # Mock problems
 │   │   ├── demo.py                   # Automatic demo launcher
 │   │   └── main.py                   # FastAPI application
 │   ├── tests/                        # Unit tests
@@ -83,6 +85,10 @@ smart-clash-reporter/
 - ✅ `GET /api/config` - Public configuration
 - ✅ `GET /api/clashes` - Clashes list with filters and pagination
 - ✅ `GET /api/clashes/{id}` - Clash details
+- ✅ `GET /api/problems` - Model Coordination problems (filterable by clash)
+- ✅ `POST /api/problems` - Create and link a problem to a clash
+- ✅ `POST /api/problems/{id}/link` - Associate an existing problem to a clash
+- ✅ `DELETE /api/problems/{id}/link` - Remove the clash association
 - ✅ `GET /api/kpis` - KPI calculations
 - ✅ `GET /api/token/viewer` - Tokens for Autodesk Viewer
 - ✅ `POST /api/capture` - Screenshot storage
@@ -140,6 +146,12 @@ smart-clash-reporter/
 - ✅ PDF generation with configuration
 - ✅ CSV data export
 - ✅ Direct download from UI
+
+**Gestion des problèmes:**
+- ✅ Visualisation des problèmes liés à un clash
+- ✅ Création de problèmes APS directement depuis le tableau de bord
+- ✅ Association/dissociation de problèmes existants
+- ✅ Rafraîchissement automatique après chaque action
 
 **3D Viewer:**
 - ✅ Autodesk Viewer placeholder

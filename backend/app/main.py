@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes_auth import router as auth_router
 from app.api.routes_clashes import router as clashes_router
 from app.api.routes_kpis import router as kpis_router
+from app.api.routes_problems import router as problems_router
 from app.api.routes_report import router as report_router
 from app.api.routes_tokens import router as tokens_router
 from app.api.routes_viewer import router as viewer_router
@@ -40,6 +41,7 @@ app.include_router(kpis_router)
 app.include_router(tokens_router)
 app.include_router(report_router)
 app.include_router(viewer_router)
+app.include_router(problems_router)
 
 
 @app.get("/api/health")

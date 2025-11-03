@@ -3,6 +3,7 @@ import base64
 import json
 import os
 from io import BytesIO
+from datetime import datetime, timezone
 
 import pandas as pd
 import plotly.express as px
@@ -256,6 +257,55 @@ def generate_pdf_report(filters, title, prepared_by):
         return None
 
 
+def fetch_problems(clash_id=None):
+    """Fetch problems from API, optionally filtered by clash."""
+    try:
+        params = {}
+        if clash_id:
+            params["clash_id"] = clash_id
+        response = requests.get(f"{API_BASE_URL}/api/problems", params=params, timeout=60)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        st.error(f"Erreur lors de la récupération des problèmes: {e}")
+        return None
+
+
+def create_problem_api(title, description, status, priority, clash_id, assigned_to=None, due_date=None):
+    """Create a new problem linked to a clash."""
+    payload = {
+        "title": title,
+        "description": description or None,
+        "status": status,
+        "priority": priority,
+        "clash_id": clash_id
+    }
+    if assigned_to:
+        payload["assigned_to"] = assigned_to
+    if due_date:
+        payload["due_date"] = due_date
+
+    response = requests.post(f"{API_BASE_URL}/api/problems", json=payload, timeout=60)
+    response.raise_for_status()
+    return response.json()
+
+
+def link_problem_api(problem_id, clash_id):
+    """Link an existing problem to a clash."""
+    payload = {"clash_id": clash_id}
+    response = requests.post(f"{API_BASE_URL}/api/problems/{problem_id}/link", json=payload, timeout=30)
+    response.raise_for_status()
+    return response.json()
+
+
+def unlink_problem_api(problem_id, clash_id):
+    """Remove the clash reference from a problem."""
+    payload = {"clash_id": clash_id}
+    response = requests.delete(f"{API_BASE_URL}/api/problems/{problem_id}/link", json=payload, timeout=30)
+    response.raise_for_status()
+    return response.json()
+
+
 def display_header(config):
     """Display application header."""
     col1, col2 = st.columns([3, 1])
@@ -403,6 +453,137 @@ def display_clash_table(clashes_data):
     st.caption(f"Page {page} / {total_pages} - Total: {total} clashes")
     
     return df
+
+
+def display_problems_panel(selected_clash_id):
+    """Display problems linked to a clash and provide management actions."""
+    st.markdown("### 🛠️ Problèmes liés au clash")
+    
+    if not selected_clash_id:
+        st.info("Sélectionnez un clash pour consulter ou créer des problèmes associés.")
+        return
+    
+    problems_response = fetch_problems(selected_clash_id)
+    problems = problems_response.get("problems", []) if problems_response else []
+
+    # Summary of overdue problems
+    if problems:
+        overdue_entries = []
+        now = datetime.now(timezone.utc)
+        for problem in problems:
+            due_date_value = problem.get("due_date")
+            if not due_date_value:
+                continue
+            try:
+                due_date = datetime.fromisoformat(due_date_value.replace("Z", "+00:00"))
+            except ValueError:
+                continue
+
+            if due_date < now and problem.get("assigned_to"):
+                overdue_entries.append(
+                    {
+                        "Titre": problem.get("title"),
+                        "Assigné à": problem.get("assigned_to"),
+                        "Échéance": due_date.strftime("%d/%m/%Y"),
+                        "Statut": problem.get("status", "").replace("_", " ").title(),
+                    }
+                )
+
+        if overdue_entries:
+            st.markdown("#### ⏰ Problèmes assignés en retard")
+            df_overdue = pd.DataFrame(overdue_entries)
+            st.dataframe(df_overdue, use_container_width=True)
+
+    if problems:
+        for problem in problems:
+            header = f"{problem['title']} • {problem['status'].replace('_', ' ').title()}"
+            with st.expander(header, expanded=False):
+                st.write(problem.get("description") or "Pas de description.")
+                meta_cols = st.columns(2)
+                meta_cols[0].markdown(f"**Priorité :** {problem['priority'].capitalize()}")
+                meta_cols[1].markdown(f"**ID :** `{problem['id']}`")
+                
+                if st.button("Retirer le lien avec ce clash", key=f"unlink-{problem['id']}"):
+                    try:
+                        unlink_problem_api(problem["id"], selected_clash_id)
+                        st.success("Lien supprimé.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Impossible de retirer le lien : {exc}")
+    else:
+        st.info("Aucun problème n'est lié à ce clash.")
+    
+    st.markdown("---")
+    st.markdown("#### ➕ Créer un nouveau problème")
+    with st.form(key="create-problem-form"):
+        title = st.text_input("Titre", max_chars=128)
+        description = st.text_area("Description", height=120)
+        status = st.selectbox(
+            "Statut",
+            options=["open", "in_progress", "resolved", "closed"],
+            format_func=lambda value: {
+                "open": "Ouvert",
+                "in_progress": "En cours",
+                "resolved": "Résolu",
+                "closed": "Fermé"
+            }[value]
+        )
+        priority = st.selectbox(
+            "Priorité",
+            options=["high", "medium", "low"],
+            format_func=lambda value: {
+                "high": "Haute",
+                "medium": "Moyenne",
+                "low": "Basse"
+            }[value],
+            index=1
+        )
+        submit = st.form_submit_button("Créer et lier")
+        
+        if submit:
+            if not title:
+                st.warning("Le titre est obligatoire pour créer un problème.")
+            else:
+                try:
+                    create_problem_api(
+                        title=title,
+                        description=description,
+                        status=status,
+                        priority=priority,
+                        clash_id=selected_clash_id
+                    )
+                    st.success("Problème créé et lié au clash.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Impossible de créer le problème : {exc}")
+    
+    st.markdown("---")
+    st.markdown("#### 🔗 Associer un problème existant")
+    all_problems_response = fetch_problems()
+    all_problems = all_problems_response.get("problems", []) if all_problems_response else []
+    linkable = [p for p in all_problems if selected_clash_id not in p.get("clash_ids", [])]
+    
+    if linkable:
+        options = {
+            f"{p['title']} ({p['id']})": p['id']
+            for p in linkable
+        }
+        selection = st.selectbox(
+            "Sélectionner un problème",
+            options=list(options.keys()),
+            key="existing-problem-select"
+        )
+        if st.button("Associer ce problème", key="link-existing-problem"):
+            problem_id = options.get(selection)
+            if problem_id:
+                try:
+                    link_problem_api(problem_id, selected_clash_id)
+                    st.success("Problème associé au clash.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Impossible d'associer le problème : {exc}")
+    else:
+        st.info("Aucun autre problème disponible pour être associé.")
 
 
 def display_viewer(config=None, selected_clash_id=None):
@@ -578,8 +759,37 @@ def main():
         level=st.session_state.filters.get("level")
     )
     
+    selected_clash_id = st.session_state.get("selected_clash_id")
+    
     if clashes_data:
         df = display_clash_table(clashes_data)
+        
+        clash_list = clashes_data.get("clashes", [])
+        if clash_list:
+            st.markdown("### 🧭 Sélectionner un clash à explorer")
+            option_map = {
+                f"{item['id']} • {item['title']}": item['id']
+                for item in clash_list
+            }
+            option_keys = list(option_map.keys())
+            
+            default_index = 0
+            if selected_clash_id and selected_clash_id in option_map.values():
+                for idx, key in enumerate(option_keys):
+                    if option_map[key] == selected_clash_id:
+                        default_index = idx
+                        break
+            
+            selected_label = st.selectbox(
+                "Clash",
+                options=option_keys,
+                index=default_index if option_keys else 0
+            )
+            selected_clash_id = option_map[selected_label]
+            st.session_state.selected_clash_id = selected_clash_id
+        else:
+            st.session_state.pop("selected_clash_id", None)
+            selected_clash_id = None
         
         # Export CSV
         if df is not None and not df.empty:
@@ -590,11 +800,19 @@ def main():
                 file_name="clashes.csv",
                 mime="text/csv"
             )
+    else:
+        st.session_state.pop("selected_clash_id", None)
+        selected_clash_id = None
+    
+    st.markdown("---")
+    
+    # Problems management
+    display_problems_panel(selected_clash_id)
     
     st.markdown("---")
     
     # Viewer section
-    display_viewer(config=config)
+    display_viewer(config=config, selected_clash_id=selected_clash_id)
     
     # Footer
     st.markdown("---")
