@@ -59,6 +59,5 @@ make-bin.zip
 APS_AUTHENTICATION_ISSUE.md
 OAUTH_3LEGGED_SETUP.md
 TROUBLESHOOT_APS_API.md
-backend/exports/clash_report_20251102_082749.pdf
-backend/exports/clash_report_20251102_085809.pdf
-backend/exports/clash_report_20251102_124123.pdf
+backend/exports/*.pdf
+
